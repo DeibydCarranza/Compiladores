@@ -149,7 +149,7 @@ void agregarListaLiterales(struct ListaLiterales *lista, struct Literales lit) {
 
 
 /* Regresa la posición del elemento, -1 si no existe para SIMBOLOS, compara 2 cadenas. Se busca si existe X*/
-int buscarLiteral(char* x, ListaSimbolos *lista) {
+int buscarSimbolo(char* x, ListaSimbolos *lista) {
 	NodoSimbolos *tmp=lista->head;
 	
 	if (tmp == NULL) { //Lista vacía
