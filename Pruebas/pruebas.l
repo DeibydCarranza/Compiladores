@@ -1,5 +1,7 @@
-cteCad  (\"(\\.|[^\"])*\")
+digito     [1-9]
+letMay     [a-zA-Z]
+ident      _({letMay}|{digito}|0|_)+
 %%
-{cteCad} {printf("%s es una cadena \n",yytext);}
+{ident}   {printf("%s es um ident \n",yytext);}
 . {printf("%s [!] No reconocido\n",yytext);}
 %%

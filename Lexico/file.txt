@@ -1,0 +1,10 @@
+{
+_a_B5
+inteiro _a,_b=5;
+quebrar("Dame un valor entero: ");
+scanf("%d",&_a);
+se (_a<_b)
+assinado("\nEl valor dado es menor a 5");
+flutuador
+assinado("\nEl valor dado es igual o mayor a 5");
+}
