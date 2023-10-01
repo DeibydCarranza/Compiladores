@@ -4,12 +4,15 @@
 #include <string.h>
 
 FILE *archSal;
+FILE *archSimbol;
+FILE *archLite;
+
 char* reservadas[] = {"assinado","caso","enquanto","fazer","flutuador",
                       "inteiro","para","quebrar","retorno","se","trocar"};
-
-void buscarPalabra(int clase,char* palabra,char**tabla,int size);
-void tokenASCII(int clase, char* valorChar);
-int sacarNum(char* cadenaNum);
+char* relacionales[] = {"==","!=",">","<",">=","<="};
+char* logicos[] = {"&&","||","!"};
+char* opCadenas[] = {"&","like"};
+char* asignacion[] = {"=","+=","-=","*=","/=","%="};
 
 typedef struct NodoSimbolos NodoSimbolos;
 typedef struct ListaSimbolos ListaSimbolos;
@@ -66,6 +69,21 @@ ListaLiterales crearListaLiterales() {
 	return lista;
 }
 
+ListaLiterales listLit;
+Literales tabLiterales;
+
+ListaSimbolos listSim;
+Simbolos tabSimbolos;
+
+void buscarPalabra(int clase,char* palabra,char**tabla,int size);
+void tokenASCII(int clase, char* valorChar);
+int sacarNum(int, char* cadenaNum);
+void funcionTablas(int clase,char* ident);
+void imprimirSimbolos(ListaSimbolos lista);
+void imprimirLiterales(ListaLiterales lista);
+void agregarListaSimbolos(struct ListaSimbolos *lista, struct Simbolos simb);
+void buscarPalabra(int clase,char* palabra,char**tabla,int size);
+void tokenASCII(int clase, char* valorChar);
 
 %}
 palRes     ("assinado"|"caso"|"enquanto"|"fazer"|"flutuador"|"inteiro"|"para"|"quebrar"|"retorno"|"se"|"trocar")
@@ -86,15 +104,15 @@ cteCad     (\"([^\"]|\\.)*\")
 opCad      (&|like)
 %%
 {opArit}     {tokenASCII(0,yytext);}
-{cteEnt}     {sacarNum(yytext);}
-{opLog}      {printf("%s es un operador logico\n",yytext);}
-{opRel}      {printf("%s es un operador relacional\n",yytext);}
-{palRes}     {printf("%s es una palabra reservada\n",yytext);}
-{ident}      {printf("%s es un identificador\n",yytext);}
+{cteEnt}     {sacarNum(3,yytext);}
+{opLog}      {buscarPalabra(1,yytext,logicos,sizeof(logicos)/sizeof(logicos[0]));}
+{opRel}      {buscarPalabra(2,yytext,relacionales,sizeof(relacionales)/sizeof(relacionales[0]));}
+{palRes}     {buscarPalabra(4,yytext,reservadas,sizeof(reservadas)/sizeof(reservadas[0]));}
+{ident}      {funcionTablas(5,yytext);}
 {simbEsp}    {tokenASCII(6,yytext);}
-{opAsig}     {printf("%s es un operador de asignacion\n",yytext);}
-{cteCad}     {printf("%s es una constante cadena\n",yytext);}
-{opCad}      {printf("%s es una operación sobre cadena\n",yytext);}
+{opAsig}     {buscarPalabra(7,yytext,asignacion,sizeof(asignacion)/sizeof(asignacion[0]));}
+{cteCad}     {funcionTablas(8,yytext);}
+{opCad}      {buscarPalabra(9,yytext,opCadenas,sizeof(opCadenas)/sizeof(opCadenas[0]));}
 {espaSalTab} {}
 .            {printf("%s [!] Símbolo no definido\n",yytext);}
 %%
@@ -106,8 +124,18 @@ int main(int argc, char *argv[]){
 	else{
 		printf("[+] Lectura del archivo '%s' \n\n",argv[1]);
 		archSal=fopen("token.txt","w");
+		archSimbol=fopen("archSimbol.txt","w");
+		archLite=fopen("archLite.txt","w");
+
+		
 		yylex();
+		imprimirSimbolos(listSim);
+		imprimirLiterales(listLit);
+
 		fclose(archSal);
+		fclose(archSimbol);
+		fclose(archLite);
+
 	}
 	fclose(yyin);
 	return 0;
@@ -119,12 +147,11 @@ int main(int argc, char *argv[]){
 void tokenASCII(int clase, char* valorChar){
 	//Conversión del operador a ASCII 
 	int valASC=(int)valorChar[0];
-	//printf("%d,%d",clase,valASC);
-	fprintf(archSal, "%d,%d\n",clase,valASC);
+	fprintf(archSal, "%d,%d   Op Arit/ Simb Esp\n",clase,valASC); 	
 }
 
 /*Obtiene el token de constantes numéricas enteras*/
-int sacarNum(char* cadenaNum){
+int sacarNum(int clase, char* cadenaNum){
 	int valor;
 	unsigned int tamCad = strlen(cadenaNum);
 	
@@ -143,14 +170,16 @@ int sacarNum(char* cadenaNum){
 		valor = atoi(cadenaNum);  // Cadena en un valor entero
 	}
 	//Generación de token
-	fprintf(archSal, "%d,%d\n",3,valor);
+	fprintf(archSal, "%d,%d   Cte NUM\n",clase,valor); 		//Clase 3 -> CTE numéricas
 
 }
 
+/* Itera sobre los catalogos hasta encontrar la palabra encontrada por la expresión regular
+   para asignar el valor al token, la clase se pasa en cada caso de las expresiones regulares*/
 void buscarPalabra(int clase,char* palabra,char** tabla,int size){ 
-    for(int i=0;i<size;i++){
-        if(strcmp(tabla[i],palabra)==0){
-            printf("4,%d\n",i);
+    for(int valor=0;valor<size;valor++){
+        if(strcmp(tabla[valor],palabra)==0){
+			fprintf(archSal,"%d,%d   %s\n",clase,valor,palabra);
             break;
         }
     }
@@ -170,14 +199,12 @@ void imprimirSimbolos(ListaSimbolos lista) {
     	printf(" LA LISTA ESTA VACIA \n");
     }
     else{
-		int i=0,tamano = lista.cantidad;
-    	printf(" Los elementos de la lista son: \n");
+		int tamano = lista.cantidad;
     	NodoSimbolos *current = lista.head;
-   		while (tamano > 0 ) { 
-        	printf("Posición: %d\n", current->tabSimb.pos);
-            printf("Nombre: %s\n", current->tabSimb.identificador);
-			printf("Tipo: %d\n", current->tabSimb.tipo);
-
+   		while (current != NULL ) { 
+        	fprintf(archSimbol,"Posicion: %d\n", current->tabSimb.pos);
+            fprintf(archSimbol,"Nombre: %s\n", current->tabSimb.identificador);
+			fprintf(archSimbol,"Tipo: %d\n\n", current->tabSimb.tipo);
 			current = current->next;
 			tamano--;
    	 	}
@@ -190,11 +217,10 @@ void imprimirLiterales(ListaLiterales lista) {
     }
     else{
 		int i=0,tamano = lista.cantidad;
-    	printf(" Los elementos de la lista son: \n");
     	NodoLiterales *current = lista.head;
    		while (tamano > 0 ) { 
-        	printf("Posición: %d\n", current->tabLiterales.pos);
-            printf("Nombre: %s\n", current->tabLiterales.cadena);
+        	fprintf(archLite,"Posicion: %d\n", current->tabLiterales.pos);
+            fprintf(archLite,"Nombre: %s\n", current->tabLiterales.cadena);
 			
 			current = current->next;
 			tamano--;
@@ -257,7 +283,8 @@ void agregarListaLiterales(struct ListaLiterales *lista, struct Literales lit) {
 /* Regresa la posición del elemento, -1 si no existe para SIMBOLOS, compara 2 cadenas. Se busca si existe X*/
 int buscarSimbolo(char* x, ListaSimbolos *lista) {
 	NodoSimbolos *tmp=lista->head;
-	
+	printf("----------------%s", x);
+
 	if (tmp == NULL) { //Lista vacía
         return -1; 
     }
@@ -270,4 +297,28 @@ int buscarSimbolo(char* x, ListaSimbolos *lista) {
 		}
 	}
 	return -1; 
+}
+
+
+/* Creación de estructura para SIMBOLOS*/
+void funcionTablas(int clase, char* ident){
+
+	if(clase == 5 && buscarSimbolo(ident,&listSim)==-1){
+		Simbolos tabla;
+		tabla.pos = listSim.cantidad;
+		tabla.identificador = strdup(ident);
+		tabla.tipo = -1;
+		
+		agregarListaSimbolos(&listSim, tabla);
+		fprintf(archSal, "%d,%d  Indetificador\n",clase,tabla.pos); 	//Clase 5 -> Identificadores
+
+	}
+	else if (clase == 8){
+		Literales tabla;
+		tabla.pos = listLit.cantidad;
+		tabla.cadena = strdup(ident);
+
+		agregarListaLiterales(&listLit, tabla);
+		fprintf(archSal, "%d,%d  Literal (Cad)\n",clase,tabla.pos); 	//Clase 8 -> CTE cad 
+	}
 }
