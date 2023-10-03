@@ -1,6 +1,0 @@
-Posicion: 0
-Nombre: "Dame un valor entero: "
-Posicion: 1
-Nombre: "\nEl valor dado es menor a 5"
-Posicion: 2
-Nombre: "\nEl valor dado es igual o mayor a 5"
