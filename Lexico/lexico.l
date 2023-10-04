@@ -1,3 +1,12 @@
+/* -----------------------------------------------
+   OBJETIVO: Elaborar un analizador léxico en lex/flex que 
+   			 reconozca los componentes léxicos pertenecientes
+			 a las clases abajo descritas.
+
+   ELABORADO 
+   POR: 	Carraza Ocho José David
+	    	Ramirez Garcia Diego Andres
+   ----------------------------------------------- */
 %{
 //BIBLIOTECAS
 #include <stdio.h>
@@ -25,12 +34,6 @@ struct ListaSimbolos {
     struct NodoSimbolos* head;
     int cantidad;
 };
-ListaSimbolos crearListaSimbolos(){
-	ListaSimbolos lista;
-	lista.head = NULL;	//Cabeza de la lista
-	lista.cantidad = 0; //Es incremental, define la posición
-	return lista;
-}
 /* Definición de estructuras para LITERALES*/
 struct Literales {
     int pos;
@@ -44,12 +47,6 @@ struct ListaLiterales {
     struct NodoLiterales *head;
     int cantidad;
 };
-ListaLiterales crearListaLiterales() {
-	ListaLiterales lista;
-	lista.head = NULL;	//Cabeza de la lista
-	lista.cantidad = 0; //Es incremental, define la posición
-	return lista;
-}
 
 //GLOBALES
 FILE *tab_tokens;
@@ -67,6 +64,8 @@ ListaSimbolos listSim;
 Simbolos tabSimbolos;
 int yylineno_anterior;
 //ENCABEZADOS
+ListaSimbolos crearListaSimbolos();
+ListaLiterales crearListaLiterales();
 void buscarPalabra(int ,char* ,char**,int );
 void tokenASCII(int , char* );
 int sacarNum(int, char* );
@@ -116,6 +115,8 @@ int main(int argc, char *argv[]){
 			printf("compilador: \033[1;31m error: \033[1;0m no such file or directory: %s\ncompilador:\033[1;31m error:\033[1;0m no input files",argv[1]);
 			exit(EXIT_FAILURE);
 		}else{
+			listSim = crearListaSimbolos();
+			listLit = crearListaLiterales();
 			// Abrimos archivos
 			tab_tokens=fopen("token","w");
 			tab_simbolos=fopen("archSimbol","w");
@@ -132,6 +133,7 @@ int main(int argc, char *argv[]){
 			fclose(tab_tokens);
 			fclose(tab_simbolos);
 			fclose(tab_literales);
+			fprintf(stderr,"\n");
 			fclose(yyin);
 		}
 	}else{
@@ -140,7 +142,19 @@ int main(int argc, char *argv[]){
 	}
 	exit(EXIT_SUCCESS);
 }
-
+/*–––––––––––––––––––––– SECCION PARA INSTANCIAR LISTAS LIGADAS––––––––––––––––––––––––*/
+ListaSimbolos crearListaSimbolos(){
+	ListaSimbolos lista;
+	lista.head = NULL;	//Cabeza de la lista
+	lista.cantidad = 0; //Es incremental, define la posición
+	return lista;
+}
+ListaLiterales crearListaLiterales() {
+	ListaLiterales lista;
+	lista.head = NULL;	//Cabeza de la lista
+	lista.cantidad = 0; //Es incremental, define la posición
+	return lista;
+}
 /* ---------------SECCIÓN DE CATÁLOGOS -------------------------*/
 
 /* Token especial para clase de operadores aritméticos y símbolos especiales*/
@@ -192,12 +206,10 @@ void imprimirSimbolos(ListaSimbolos lista) {
     	printf(" LA LISTA ESTA VACIA \n");
     }
     else{
-		int tamano = lista.cantidad;
     	NodoSimbolos *current = lista.head;
    		while (current != NULL ) { 
-            fprintf(tab_simbolos,"%d,%s,%d", current->tabSimb.pos, current->tabSimb.identificador, current->tabSimb.tipo);
+            fprintf(tab_simbolos,"%d,%s,%d\n", current->tabSimb.pos, current->tabSimb.identificador, current->tabSimb.tipo);
 			current = current->next;
-			tamano--;
    	 	}
 	}
 }
@@ -270,11 +282,11 @@ void agregarListaLiterales(struct ListaLiterales *lista, struct Literales lit) {
 
 
 /* Regresa la posición del elemento, -1 si no existe para SIMBOLOS, compara 2 cadenas. Se busca si existe X*/
-int buscarSimbolo(char* x, ListaSimbolos *lista) {
+int buscarSimbolo(char* identificador, ListaSimbolos *lista) {
 	// Se copia el Nodo inicial de la lista 
 	NodoSimbolos* tmp=lista->head;
 	while (tmp!=NULL){ 
-		if (strcmp(tmp->tabSimb.identificador, x) == 0){ //Si son iguales ambas cadenas
+		if (strcmp(tmp->tabSimb.identificador, identificador) == 0){ //Si son iguales ambas cadenas
 			return tmp->tabSimb.pos;
 		}else{
 			tmp=tmp->next;
@@ -296,11 +308,11 @@ void funcionTablas(int clase, char* ident){
 			tabla.identificador = strdup(ident);
 			tabla.tipo = -1;
 			agregarListaSimbolos(&listSim, tabla);
-			fprintf(tab_tokens, "%d,%d\n",clase,tabla.pos); 
+			fprintf(tab_tokens, "%d,%d			Simbolo\n",clase,tabla.pos); 
 		}	
 		// Si existe
 		else{
-			fprintf(tab_tokens, "%d,%d\n",clase,busqueda); 
+			fprintf(tab_tokens, "%d,%d			Simbolo Rpetido\n",clase,busqueda); 
 		}
 
 	}
@@ -311,11 +323,11 @@ void funcionTablas(int clase, char* ident){
 		tabla.cadena = strdup(ident);
 
 		agregarListaLiterales(&listLit, tabla);
-		fprintf(tab_tokens, "%d,%d\n",clase,tabla.pos); 	//Clase 8 -> CTE cad 
+		fprintf(tab_tokens, "%d,%d 				Literales\n",clase,tabla.pos); 	//Clase 8 -> CTE cad 
 	}
 }
 
-*/*/
+/* Función para detectar los errores e ir imprimiendo en pantalla*/
 void yyerror(char* mensaje){
 	if(yylineno != yylineno_anterior ){
 		fprintf(stderr,"\n");

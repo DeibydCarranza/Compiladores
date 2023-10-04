@@ -1,0 +1,42 @@
+0,"a,b,c,d,e,f,g,h
+         i,j,k,l,m,n,o"
+1,"
+_inteiro _variable = 10;
+
+_enquanto (_variable > 0) {
+    _variable = _variable - 1;
+    _se (_variable == 5) {
+        _retorno;
+    }
+}
+
+_para (_inteiro _i = 0; _i < 10; _i = _i + 1) {
+    _caso (_i % 2 == 0) {
+        _quebrar;
+    }
+}
+
+_flutuador _calculo = (3.14 * _variable);
+
+
+
+
+_caso _calculo > 10 {
+    _retorno "
+2,";
+} _senão {
+    _retorno "
+3,";
+}
+_cadena _mensaje = "
+4,";
+
+
+                                    _funcao _ejemplo() {
+    _retorno _mensaje;
+}
+_si (1 < 2 && 3 > 2) {
+    _escribir("
+5,");
+} _sino {
+    _escribir("
