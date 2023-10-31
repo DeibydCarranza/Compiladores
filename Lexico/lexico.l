@@ -1,3 +1,4 @@
+%{
 /* -----------------------------------------------
    OBJETIVO: Elaborar un analizador léxico en lex/flex que 
    			 reconozca los componentes léxicos pertenecientes
@@ -7,7 +8,6 @@
    POR: 	Carraza Ocho José David
 	    	Ramirez Garcia Diego Andres
    ----------------------------------------------- */
-%{
 //BIBLIOTECAS
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,6 +52,7 @@ struct ListaLiterales {
 FILE *tab_tokens;
 FILE *tab_simbolos;
 FILE *tab_literales;
+FILE *errores;
 char* ERROR;
 char* reservadas[]   = {"assinado","caso","enquanto","fazer","flutuador","inteiro","para","quebrar","retorno","se","trocar"};
 char* relacionales[] = {"==","!=",">","<",">=","<="};
@@ -112,15 +113,18 @@ opCad         (&|like)
 int main(int argc, char *argv[]){
 	if(argc > 1){
 		if ( (yyin=fopen(argv[1],"r"))==NULL){
-			printf("compilador: \033[1;31m error: \033[1;0m no such file or directory: %s\ncompilador:\033[1;31m error:\033[1;0m no input files",argv[1]);
+			// Excepciones si el archivo pasado como arguumento no exite en el directorio donde se corre
+			printf("compilador: \033[1;31m error: \033[1;0m no such file or directory: %s\ncompilador:\033[1;31m error:\033[1;0m no input files\n",argv[1]);
 			exit(EXIT_FAILURE);
 		}else{
 			listSim = crearListaSimbolos();
 			listLit = crearListaLiterales();
+
 			// Abrimos archivos
 			tab_tokens=fopen("token","w");
 			tab_simbolos=fopen("archSimbol","w");
 			tab_literales=fopen("archLite","w");
+			errores=fopen("errores","w");
 
 			// iniciamos el analizador léxico
 			yylex();
@@ -128,15 +132,18 @@ int main(int argc, char *argv[]){
 			// Guardamos tabla de simbolos y literales
 			imprimirSimbolos(listSim);
 			imprimirLiterales(listLit);
+			fprintf(stderr,"\n");
+			fprintf(errores,"\n");
 
 			// Cerramos archivos
 			fclose(tab_tokens);
 			fclose(tab_simbolos);
 			fclose(tab_literales);
-			fprintf(stderr,"\n");
+			fclose(errores);
 			fclose(yyin);
 		}
 	}else{
+		// Excepción si no se pasa como argumento un archivo
 		 printf("compilador:\033[1;31m error:\033[1;0m no input files\n");
 		 exit(EXIT_FAILURE);
 	}
@@ -161,7 +168,7 @@ ListaLiterales crearListaLiterales() {
 void tokenASCII(int clase, char* valorChar){
 	//Conversión del operador a ASCII 
 	int valASC=(int)valorChar[0];
-	fprintf(tab_tokens, "%d,%d   Op Arit/ Simb Esp\n",clase,valASC); 	
+	fprintf(tab_tokens, "%d,%d\n",clase,valASC); 	
 }
 
 /*Obtiene el token de constantes numéricas enteras*/
@@ -185,7 +192,7 @@ int sacarNum(int clase, char* cadenaNum){
 		valor = atoi(cadenaNum);  // Cadena en un valor entero
 	}
 	//Generación de token
-	fprintf(tab_tokens, "%d,%d   Cte NUM\n",clase,valor); 		//Clase 3 -> CTE numéricas
+	fprintf(tab_tokens, "%d,%d\n",clase,valor); 		//Clase 3 -> CTE numéricas
 }
 
 /* Itera sobre los catalogos hasta encontrar la palabra encontrada por la expresión regular
@@ -193,7 +200,7 @@ int sacarNum(int clase, char* cadenaNum){
 void buscarPalabra(int clase,char* palabra,char** tabla,int size){ 
     for(int valor=0;valor<size;valor++){
         if(strcmp(tabla[valor],palabra)==0){
-			fprintf(tab_tokens,"%d,%d   %s\n",clase,valor,palabra);
+			fprintf(tab_tokens,"%d,%d\n",clase,valor);
             break;
         }
     }
@@ -308,11 +315,11 @@ void funcionTablas(int clase, char* ident){
 			tabla.identificador = strdup(ident);
 			tabla.tipo = -1;
 			agregarListaSimbolos(&listSim, tabla);
-			fprintf(tab_tokens, "%d,%d			Simbolo\n",clase,tabla.pos); 
+			fprintf(tab_tokens, "%d,%d\n",clase,tabla.pos); 
 		}	
 		// Si existe
 		else{
-			fprintf(tab_tokens, "%d,%d			Simbolo Rpetido\n",clase,busqueda); 
+			fprintf(tab_tokens, "%d,%d\n",clase,busqueda); 
 		}
 
 	}
@@ -323,7 +330,7 @@ void funcionTablas(int clase, char* ident){
 		tabla.cadena = strdup(ident);
 
 		agregarListaLiterales(&listLit, tabla);
-		fprintf(tab_tokens, "%d,%d 				Literales\n",clase,tabla.pos); 	//Clase 8 -> CTE cad 
+		fprintf(tab_tokens, "%d,%d\n",clase,tabla.pos); 	//Clase 8 -> CTE cad 
 	}
 }
 
@@ -331,6 +338,7 @@ void funcionTablas(int clase, char* ident){
 void yyerror(char* mensaje){
 	if(yylineno != yylineno_anterior ){
 		fprintf(stderr,"\n");
+		fprintf(errores,"\n");
 		printCaracter_NoHeader(mensaje);
 		// Actualizamos la línea donde se encontro el caracter erroneo
 		yylineno_anterior = yylineno;
@@ -342,8 +350,10 @@ void yyerror(char* mensaje){
 // Imprimir icinio de una cadena errornea 
 void printCaracter_NoHeader(char* caracter){
 	fprintf(stderr,"Compilador:%d\033[1;31m error:\033[1;0m %s",yylineno,caracter);
+	fprintf(errores,"Compilador:%d error: %s",yylineno,caracter);
 }
 // Imprimir elementos de la cadena errornea antes encontrada
 void printCaracter_Header(char* caracter){
 	fprintf(stderr,"%s",caracter);
+	fprintf(errores,"%s",caracter);
 }
