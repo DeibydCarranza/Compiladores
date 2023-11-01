@@ -1,6 +1,8 @@
-Lexico/a.out
-Lexico/lex.yy.c
+*/a.out
+*/lex.yy.c
 
-Lexico/archLite*
-Lexico/archSimbol*
-Lexico/token*
+*/archLite*
+*/archSimbol*
+*/token*
+*/atomos*
+*/errores*
