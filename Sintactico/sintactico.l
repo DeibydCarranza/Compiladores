@@ -93,7 +93,7 @@ opArit        ({signo}|{opMulDiv})
 opLog         ("&&"|"||"|"!")
 opRel         ([><=!]=|>|<)
 letra         [a-zA-Z]
-ident         _({letra}|{digito}|0)+
+ident         _{letra}({letra}|{digito}|0)*
 simbEsp       ("("|")"|"{"|"}"|";"|","|"["|"]"|":"|"#")
 opAsig        ({signo}|{opMulDiv})?=
 cteCad        (\"([^\"]|\\.)*\")
