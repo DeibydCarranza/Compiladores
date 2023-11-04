@@ -1,8 +1,8 @@
 %{
 /* -----------------------------------------------
-   OBJETIVO: Elaborar un analizador léxico en lex/flex que 
-   			 reconozca los componentes léxicos pertenecientes
-			 a las clases abajo descritas.
+   OBJETIVO: Elaborar un analizador sintáctico en lex/flex que 
+   			 sea capaz de reconocer a partir de una gramática,
+			 la estructura de un lenguaje.
 
    ELABORADO 
    POR: 	Carraza Ocho José David
@@ -53,7 +53,10 @@ FILE *tab_tokens;
 FILE *tab_simbolos;
 FILE *tab_literales;
 FILE *errores;
+FILE *cad_atomos;
+
 char* ERROR;
+char car;
 char* reservadas[]   = {"assinado","caso","enquanto","fazer","flutuador","inteiro","para","quebrar","retorno","se","trocar"};
 char* relacionales[] = {"==","!=",">","<",">=","<="};
 char* logicos[]      = {"&&","||","!"};
@@ -74,10 +77,15 @@ void funcionTablas(int ,char* );
 void imprimirSimbolos(ListaSimbolos );
 void imprimirLiterales(ListaLiterales );
 void agregarListaSimbolos(ListaSimbolos *, Simbolos);
+void agregarListaLiterales(ListaLiterales *, Literales);
 void yyerror(char*);
 void printCaracter_NoHeader(char*);
 void printCaracter_Header(char*);
 
+void otraFunc();
+void Func();
+void TipoF();
+void errorSint(char);
 %}
 %option yylineno
 palRes        ("assinado"|"caso"|"enquanto"|"fazer"|"flutuador"|"inteiro"|"para"|"quebrar"|"retorno"|"se"|"trocar")
@@ -91,7 +99,7 @@ opArit        ({signo}|{opMulDiv})
 opLog         ("&&"|"||"|"!")
 opRel         ([><=!]=|>|<)
 letra         [a-zA-Z]
-ident         _({letra}|{digito}|0|_)+
+ident         _{letra}({letra}|{digito}|0)*
 simbEsp       ("("|")"|"{"|"}"|";"|","|"["|"]"|":"|"#")
 opAsig        ({signo}|{opMulDiv})?=
 cteCad        (\"([^\"]|\\.)*\")
@@ -122,6 +130,7 @@ int main(int argc, char *argv[]){
 
 			// Abrimos archivos
 			tab_tokens=fopen("token","w");
+			cad_atomos=fopen("atomos","w");
 			tab_simbolos=fopen("archSimbol","w");
 			tab_literales=fopen("archLite","w");
 			errores=fopen("errores","w");
@@ -137,6 +146,7 @@ int main(int argc, char *argv[]){
 
 			// Cerramos archivos
 			fclose(tab_tokens);
+			fclose(cad_atomos);
 			fclose(tab_simbolos);
 			fclose(tab_literales);
 			fclose(errores);
@@ -168,7 +178,9 @@ ListaLiterales crearListaLiterales() {
 void tokenASCII(int clase, char* valorChar){
 	//Conversión del operador a ASCII 
 	int valASC=(int)valorChar[0];
-	fprintf(tab_tokens, "%d,%d\n",clase,valASC); 	
+	fprintf(tab_tokens, "%d,%d\n",clase,valASC);
+	fprintf(cad_atomos, "%c",valorChar[0]); 	
+ 	
 }
 
 /*Obtiene el token de constantes numéricas enteras*/
@@ -193,6 +205,8 @@ int sacarNum(int clase, char* cadenaNum){
 	}
 	//Generación de token
 	fprintf(tab_tokens, "%d,%d\n",clase,valor); 		//Clase 3 -> CTE numéricas
+	fprintf(cad_atomos, "n"); 							//"n" -> átomo para números
+
 }
 
 /* Itera sobre los catalogos hasta encontrar la palabra encontrada por la expresión regular
@@ -201,6 +215,46 @@ void buscarPalabra(int clase,char* palabra,char** tabla,int size){
     for(int valor=0;valor<size;valor++){
         if(strcmp(tabla[valor],palabra)==0){
 			fprintf(tab_tokens,"%d,%d\n",clase,valor);
+
+			if (clase == 1){													//Clase de OpLogicos
+				if (strcmp(logicos[0],palabra)==0) fprintf(cad_atomos,"h");
+				else if (strcmp(logicos[1],palabra)==0) fprintf(cad_atomos,"j");
+				else if (strcmp(logicos[2],palabra)==0) fprintf(cad_atomos,"!");
+			}
+			else if (clase == 2){												//Clase de OpRelacionales
+				if (strcmp(relacionales[0],palabra)==0) fprintf(cad_atomos,"e");
+				else if (strcmp(relacionales[1],palabra)==0) fprintf(cad_atomos,"d");
+				else if (strcmp(relacionales[2],palabra)==0) fprintf(cad_atomos,">");
+				else if (strcmp(relacionales[3],palabra)==0) fprintf(cad_atomos,"<");
+				else if (strcmp(relacionales[4],palabra)==0) fprintf(cad_atomos,"m");
+				else if (strcmp(relacionales[5],palabra)==0) fprintf(cad_atomos,"w");
+			}
+			else if (clase == 4){												//Clase de PalReservadas
+				if (strcmp(reservadas[0],palabra)==0) fprintf(cad_atomos,"g");
+				else if (strcmp(reservadas[1],palabra)==0) fprintf(cad_atomos,"c");
+				else if (strcmp(reservadas[2],palabra)==0) fprintf(cad_atomos,"q");
+				else if (strcmp(reservadas[3],palabra)==0) fprintf(cad_atomos,"z");
+				else if (strcmp(reservadas[4],palabra)==0) fprintf(cad_atomos,"f");
+				else if (strcmp(reservadas[5],palabra)==0) fprintf(cad_atomos,"i");
+				else if (strcmp(reservadas[6],palabra)==0) fprintf(cad_atomos,"p");
+				else if (strcmp(reservadas[7],palabra)==0) fprintf(cad_atomos,"u");
+				else if (strcmp(reservadas[8],palabra)==0) fprintf(cad_atomos,"t");
+				else if (strcmp(reservadas[9],palabra)==0) fprintf(cad_atomos,"s");
+				else if (strcmp(reservadas[10],palabra)==0) fprintf(cad_atomos,"b");
+			} 
+			else if (clase == 7){												//Clase OpAsignacion
+				if (strcmp(asignacion[0],palabra)==0) fprintf(cad_atomos,"=");
+				else if (strcmp(asignacion[1],palabra)==0) fprintf(cad_atomos,"x");
+				else if (strcmp(asignacion[2],palabra)==0) fprintf(cad_atomos,"y");
+				else if (strcmp(asignacion[3],palabra)==0) fprintf(cad_atomos,"k");
+				else if (strcmp(asignacion[4],palabra)==0) fprintf(cad_atomos,"r");
+				else if (strcmp(asignacion[5],palabra)==0) fprintf(cad_atomos,"0");
+			}
+			else if (clase == 9){												//Clase OpCadenas
+				if (strcmp(opCadenas[0],palabra)==0) fprintf(cad_atomos,"&");
+				else if (strcmp(opCadenas[1],palabra)==0) fprintf(cad_atomos,"l");
+			}
+
             break;
         }
     }
@@ -316,10 +370,14 @@ void funcionTablas(int clase, char* ident){
 			tabla.tipo = -1;
 			agregarListaSimbolos(&listSim, tabla);
 			fprintf(tab_tokens, "%d,%d\n",clase,tabla.pos); 
+			fprintf(cad_atomos, "a"); 						//a-> átomo de identificadores
+
 		}	
 		// Si existe
 		else{
 			fprintf(tab_tokens, "%d,%d\n",clase,busqueda); 
+			fprintf(cad_atomos, "a"); 						//a-> átomo de identificadores
+
 		}
 
 	}
@@ -331,6 +389,8 @@ void funcionTablas(int clase, char* ident){
 
 		agregarListaLiterales(&listLit, tabla);
 		fprintf(tab_tokens, "%d,%d\n",clase,tabla.pos); 	//Clase 8 -> CTE cad 
+		fprintf(cad_atomos, "v"); 							//v-> átomo de cadenas
+
 	}
 }
 
@@ -357,3 +417,446 @@ void printCaracter_Header(char* caracter){
 	fprintf(stderr,"%s",caracter);
 	fprintf(errores,"%s",caracter);
 }
+
+void errorSint(char car){
+	printf("sdf");
+}
+
+void otraFunc(){
+	if (car=='g' || car=='f' || car=='i'){
+		Func();
+		otraFunc();
+
+	}else if (car=='\n'){
+		return;
+	}
+}
+
+void Func(){
+	if (car=='g' || car=='f' || car=='i'){
+		TipoF();
+
+		if(car =='a') car = getchar();
+			else errorSint(car);
+		
+		if(car =='(') car = getchar();
+			else errorSint(car);
+
+		//listArg();
+
+		if(car ==')') car = getchar();
+			else errorSint(car);
+
+		if(car =='{') car = getchar();
+			else errorSint(car);
+		
+		//Cuerpo();
+
+		if(car =='}') car = getchar();
+			else errorSint(car);
+
+		return;
+	} else{
+		errorSint(car);
+		return;
+	}
+}
+
+void TipoF(){
+	if (car=='f' || car=='i'){
+		//Tipo();
+	}else if(car == 'g'){
+		car = getchar();
+	}else{
+		errorSint(car);
+		return;
+	}
+}
+
+void R(){
+	if (car=='(' || car=='a' || car=='n' || car=='['){
+		E();
+		opRel();
+		E();
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+
+void opRel(){
+	if (car=='>'){
+		car = getchar();
+		return;
+	}else if(car=='<'){
+		car = getchar();
+		return;
+	}else if(car=='e'){
+		car = getchar();
+		return;
+	}else if(car=='d'){
+		car = getchar();
+		return;
+	}else if(car=='m'){
+		car = getchar();
+		return;
+	}else if(car=='w'){
+		car = getchar();
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+
+void Sent(){
+	if (car=='a'){
+		Asig();
+		return;
+	}else if(car=='u'){
+		Q();
+		return;
+	}else if(car=='t'){
+		Ret();
+		return;
+	}else if(car=='b'){
+		Trocar();
+		return;
+	}else if(car=='q'){
+		Enq();
+		return;
+	}else if(car=='z'){
+		Faz();
+		return;
+	}else if(car=='s'){
+		Se();
+		return;
+	}else if(car=='p'){
+		Para();
+		return;
+	}else if(car=='['){
+		Llama();
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void listaS(){
+	if (car=='a' || car=='u'||car=='t'||car=='b'||car=='q'||car=='z'||car=='s'||car=='p'||car=='['){
+		Sent();
+		listaS();
+		return;
+	}else if(car=='#' || car=='}'){
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void expLogica(){
+	if (car=='!'){
+		car = getchar();
+		expRel();
+		return;
+	}else if(car=='(' || car=='a' || car=='n'||car=='['){
+		R();
+		expLog();
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void expLog(){
+	if (car=='h'||car=='j'){
+		opLog();
+		R();
+		return;
+	}else if(car==')'){
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void expRel(){
+	if (car=='{'){
+		car = getchar();
+		R();
+		if(car=='}') car = getchar();
+		else errorSint(car);
+		return;
+	}else if(car=='(' || car=='a' || car=='n'||car=='['){
+		E();
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void Log(){
+	if (car=='h'){
+		car = getchar();
+		return;
+	}else if(car=='j'){
+		car = getchar();
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void Enq(){
+	if (car=='q'){
+		car = getchar();
+		if(car=='(') car = getchar();
+		else errorSint(car);
+		expLogica();
+		if(car==')') car = getchar();
+		else errorSint(car);
+		if(car=='#') car = getchar();
+		else errorSint(car);
+		listaS();
+		if(car=='#') car = getchar();
+		else errorSint(car);
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void Se(){
+	if (car=='s'){
+		car = getchar();
+		if(car=='(') car = getchar();
+		else errorSint(car);
+		expLogica();
+		if(car==')') car = getchar();
+		else errorSint(car);
+		if(car=='#') car = getchar();
+		else errorSint(car);
+		listaS();
+		if(car=='#') car = getchar();
+		else errorSint(car);
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void Q(){
+	if (car=='u'){
+		car = getchar();
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void Faz(){
+	if (car=='z'){
+		car = getchar();
+		if(car=='#') car = getchar();
+		else errorSint(car);
+		listaS();
+		if(car=='#') car = getchar();
+		else errorSint(car);
+		if(car=='q') car = getchar();
+		else errorSint(car);
+		if(car=='(') car = getchar();
+		else errorSint(car);
+		expLogica();
+		if(car==')') car = getchar();
+		else errorSint(car);
+		if(car==';') car = getchar();
+		else errorSint(car);
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void Ret(){
+	if(car=='t'){
+		car = getchar();
+		valRet();
+		if(car==';') car = getchar();
+		else errorSint(car);
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void valRet(){
+	if(car=='(' || car=='a' || car=='n'||car=='['){
+		E();
+		return;
+	}else if(car=='{'){
+		car = getchar();
+		expCad();
+		if(car=='}') car = getchar();
+		else errorSint(car);
+		return;
+	}else if(car==';'){
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void expCad(){
+	if(car=='a'){
+		car = getchar();
+		opCad();
+		return;
+	}else if(car=='v'){
+		car = getchar();
+		opCad();
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void opCad(){
+	if(car=='l'){
+		car = getchar();
+		expCad();
+		return;
+	}else if(car=='h'){
+		car = getchar();
+		expCad();
+		return;
+	}else if(car=='}'){
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void Para(){
+	if(car=='p'){
+		car = getchar();
+		if(car=='a') car = getchar();
+		else errorSint(car);
+		if(car=='[') car = getchar();
+		else errorSint(car);
+		if(car=='n') car = getchar();
+		else errorSint(car);
+		if(car==',') car = getchar();
+		else errorSint(car);
+		if(car=='n') car = getchar();
+		else errorSint(car);
+		if(car==']') car = getchar();
+		else errorSint(car);
+		if(car=='#') car = getchar();
+		else errorSint(car);
+		listaS();
+		if(car=='#') car = getchar();
+		else errorSint(car);
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void Trocar(){
+	if(car=='b'){
+		car = getchar();
+		if(car=='()') car = getchar();
+		else errorSint(car);
+		if(car=='a') car = getchar();
+		else errorSint(car);
+		if(car==')') car = getchar();
+		else errorSint(car);
+		if(car==':') car = getchar();
+		else errorSint(car);
+		if(car=='#') car = getchar();
+		else errorSint(car);
+		if(car=='c') car = getchar();
+		else errorSint(car);
+		if(car=='(') car = getchar();
+		else errorSint(car);
+		if(car=='n') car = getchar();
+		else errorSint(car);
+		if(car==')') car = getchar();
+		else errorSint(car);
+		if(car=='{') car = getchar();
+		else errorSint(car);
+		listaS();
+		if(car=='}') car = getchar();
+		else errorSint(car);
+		casos();
+		if(car=='#') car = getchar();
+		else errorSint(car);
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void casos(){
+	if(car=='#'){
+		return;
+	}else if(car=='c'){
+		car = getchar();
+		if(car=='(') car = getchar();
+		else errorSint(car);
+		if(car=='n') car = getchar();
+		else errorSint(car);
+		if(car==')') car = getchar();
+		else errorSint(car);
+		if(car=='{') car = getchar();
+		else errorSint(car);
+		listaS();
+		if(car=='}') car = getchar();
+		else errorSint(car);
+		casos();
+		return;
+	}else if(car=='('){
+		car = getchar();
+		if(car==')') car = getchar();
+		else errorSint(car);
+		if(car=='{') car = getchar();
+		else errorSint(car);
+		listaS();
+		if(car=='}') car = getchar();
+		else errorSint(car);
+		casos();
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void Llama(){
+	if(car=='['){
+		car =getchar();
+		if(car=='a') car = getchar();
+		else errorSint(car);
+		if(car=='(') car = getchar();
+		else errorSint(car);
+		listaP();
+		if(car==')') car = getchar();
+		else errorSint(car);
+		if(car==']') car = getchar();
+		else errorSint(car);
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void listP(){
+	if(car==')'){
+		return;
+	}else if(car=='(' || car=='a' || car=='n'||car=='['){
+		E();
+		Param();
+		return;
+	}else if(car=='{'){
+		car = getchar();
+		expCad();
+		if(car=='}') car = getchar();
+		else errorSint(car);
+		Param();
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void Param(){
+	if(car==','){
+		car = getchar();
+		listP();
+		return;
+	}else if(car==')'){
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+

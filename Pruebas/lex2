@@ -1,0 +1,43 @@
+3.14
+_hola = "a,b,c,d,e,f,g,h
+         i,j,k,l,m,n,o""
+_inteiro _variable = 10;
+
+_enquanto (_variable > 0) {
+    _variable = _variable - 1;
+    _se (_variable == 5) {
+        _retorno;
+    }
+}
+
+_para (_inteiro _i = 0; _i < 10; _i = _i + 1) {
+    _caso (_i % 2 == 0) {
+        _quebrar;
+    }
+}
+
+_flutuador _calculo = (3.14 * _variable);
+
+
+
+
+_caso _calculo > 10 {
+    _retorno "Mayor a 10";
+} _senão {
+    _retorno "Menor o igual a 10";
+}
+_cadena _mensaje = "Hola, mundo!";
+
+
+                                    _funcao _ejemplo() {
+    _retorno _mensaje;
+}
+_si (1 < 2 && 3 > 2) {
+    _escribir("1 es menor que 2 y 3 es mayor que 2");
+} _sino {
+    _escribir("No se cumple la condición");
+}
+
+
+__ = 10;
+(-10) * (+10)((+10)(-10))
