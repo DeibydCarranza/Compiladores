@@ -418,26 +418,26 @@ void errorSint(char car){
 }
 
 void Func(){
-	if (strcmp(&car,"g")==0 || strcmp(&car,"f")==0 || strcmp(&car,"i")==0){
+	if (car=='g' || car=='f' || car=='i'){
 		//TipoF();
 
-		if(strcmp(&car,"a")==0) car = getchar();
+		if(car =='a') car = getchar();
 			else errorSint(car);
 		
-		if(strcmp(&car,"(")==0) car = getchar();
+		if(car =='(') car = getchar();
 			else errorSint(car);
 
 		//listArg();
 
-		if(strcmp(&car,")")==0) car = getchar();
+		if(car ==')') car = getchar();
 			else errorSint(car);
 
-		if(strcmp(&car,"{")==0) car = getchar();
+		if(car =='{') car = getchar();
 			else errorSint(car);
 		
 		//Cuerpo();
 
-		if(strcmp(&car,"}")==0) car = getchar();
+		if(car =='}') car = getchar();
 			else errorSint(car);
 
 		return;
