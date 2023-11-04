@@ -77,6 +77,7 @@ void funcionTablas(int ,char* );
 void imprimirSimbolos(ListaSimbolos );
 void imprimirLiterales(ListaLiterales );
 void agregarListaSimbolos(ListaSimbolos *, Simbolos);
+void agregarListaLiterales(ListaLiterales *, Literales);
 void yyerror(char*);
 void printCaracter_NoHeader(char*);
 void printCaracter_Header(char*);
@@ -472,5 +473,390 @@ void TipoF(){
 	}
 }
 
+void R(){
+	if (car=='(' || car=='a' || car=='n' || car=='['){
+		E();
+		opRel();
+		E();
+		return;
+	}else{
+		errorSint(car);
+	}
+}
 
+void opRel(){
+	if (car=='>'){
+		car = getchar();
+		return;
+	}else if(car=='<'){
+		car = getchar();
+		return;
+	}else if(car=='e'){
+		car = getchar();
+		return;
+	}else if(car=='d'){
+		car = getchar();
+		return;
+	}else if(car=='m'){
+		car = getchar();
+		return;
+	}else if(car=='w'){
+		car = getchar();
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+
+void Sent(){
+	if (car=='a'){
+		Asig();
+		return;
+	}else if(car=='u'){
+		Q();
+		return;
+	}else if(car=='t'){
+		Ret();
+		return;
+	}else if(car=='b'){
+		Trocar();
+		return;
+	}else if(car=='q'){
+		Enq();
+		return;
+	}else if(car=='z'){
+		Faz();
+		return;
+	}else if(car=='s'){
+		Se();
+		return;
+	}else if(car=='p'){
+		Para();
+		return;
+	}else if(car=='['){
+		Llama();
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void listaS(){
+	if (car=='a' || car=='u'||car=='t'||car=='b'||car=='q'||car=='z'||car=='s'||car=='p'||car=='['){
+		Sent();
+		listaS();
+		return;
+	}else if(car=='#' || car=='}'){
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void expLogica(){
+	if (car=='!'){
+		car = getchar();
+		expRel();
+		return;
+	}else if(car=='(' || car=='a' || car=='n'||car=='['){
+		R();
+		expLog();
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void expLog(){
+	if (car=='h'||car=='j'){
+		opLog();
+		R();
+		return;
+	}else if(car==')'){
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void expRel(){
+	if (car=='{'){
+		car = getchar();
+		R();
+		if(car=='}') car = getchar();
+		else errorSint(car);
+		return;
+	}else if(car=='(' || car=='a' || car=='n'||car=='['){
+		E();
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void Log(){
+	if (car=='h'){
+		car = getchar();
+		return;
+	}else if(car=='j'){
+		car = getchar();
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void Enq(){
+	if (car=='q'){
+		car = getchar();
+		if(car=='(') car = getchar();
+		else errorSint(car);
+		expLogica();
+		if(car==')') car = getchar();
+		else errorSint(car);
+		if(car=='#') car = getchar();
+		else errorSint(car);
+		listaS();
+		if(car=='#') car = getchar();
+		else errorSint(car);
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void Se(){
+	if (car=='s'){
+		car = getchar();
+		if(car=='(') car = getchar();
+		else errorSint(car);
+		expLogica();
+		if(car==')') car = getchar();
+		else errorSint(car);
+		if(car=='#') car = getchar();
+		else errorSint(car);
+		listaS();
+		if(car=='#') car = getchar();
+		else errorSint(car);
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void Q(){
+	if (car=='u'){
+		car = getchar();
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void Faz(){
+	if (car=='z'){
+		car = getchar();
+		if(car=='#') car = getchar();
+		else errorSint(car);
+		listaS();
+		if(car=='#') car = getchar();
+		else errorSint(car);
+		if(car=='q') car = getchar();
+		else errorSint(car);
+		if(car=='(') car = getchar();
+		else errorSint(car);
+		expLogica();
+		if(car==')') car = getchar();
+		else errorSint(car);
+		if(car==';') car = getchar();
+		else errorSint(car);
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void Ret(){
+	if(car=='t'){
+		car = getchar();
+		valRet();
+		if(car==';') car = getchar();
+		else errorSint(car);
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void valRet(){
+	if(car=='(' || car=='a' || car=='n'||car=='['){
+		E();
+		return;
+	}else if(car=='{'){
+		car = getchar();
+		expCad();
+		if(car=='}') car = getchar();
+		else errorSint(car);
+		return;
+	}else if(car==';'){
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void expCad(){
+	if(car=='a'){
+		car = getchar();
+		opCad();
+		return;
+	}else if(car=='v'){
+		car = getchar();
+		opCad();
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void opCad(){
+	if(car=='l'){
+		car = getchar();
+		expCad();
+		return;
+	}else if(car=='h'){
+		car = getchar();
+		expCad();
+		return;
+	}else if(car=='}'){
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void Para(){
+	if(car=='p'){
+		car = getchar();
+		if(car=='a') car = getchar();
+		else errorSint(car);
+		if(car=='[') car = getchar();
+		else errorSint(car);
+		if(car=='n') car = getchar();
+		else errorSint(car);
+		if(car==',') car = getchar();
+		else errorSint(car);
+		if(car=='n') car = getchar();
+		else errorSint(car);
+		if(car==']') car = getchar();
+		else errorSint(car);
+		if(car=='#') car = getchar();
+		else errorSint(car);
+		listaS();
+		if(car=='#') car = getchar();
+		else errorSint(car);
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void Trocar(){
+	if(car=='b'){
+		car = getchar();
+		if(car=='()') car = getchar();
+		else errorSint(car);
+		if(car=='a') car = getchar();
+		else errorSint(car);
+		if(car==')') car = getchar();
+		else errorSint(car);
+		if(car==':') car = getchar();
+		else errorSint(car);
+		if(car=='#') car = getchar();
+		else errorSint(car);
+		if(car=='c') car = getchar();
+		else errorSint(car);
+		if(car=='(') car = getchar();
+		else errorSint(car);
+		if(car=='n') car = getchar();
+		else errorSint(car);
+		if(car==')') car = getchar();
+		else errorSint(car);
+		if(car=='{') car = getchar();
+		else errorSint(car);
+		listaS();
+		if(car=='}') car = getchar();
+		else errorSint(car);
+		casos();
+		if(car=='#') car = getchar();
+		else errorSint(car);
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void casos(){
+	if(car=='#'){
+		return;
+	}else if(car=='c'){
+		car = getchar();
+		if(car=='(') car = getchar();
+		else errorSint(car);
+		if(car=='n') car = getchar();
+		else errorSint(car);
+		if(car==')') car = getchar();
+		else errorSint(car);
+		if(car=='{') car = getchar();
+		else errorSint(car);
+		listaS();
+		if(car=='}') car = getchar();
+		else errorSint(car);
+		casos();
+		return;
+	}else if(car=='('){
+		car = getchar();
+		if(car==')') car = getchar();
+		else errorSint(car);
+		if(car=='{') car = getchar();
+		else errorSint(car);
+		listaS();
+		if(car=='}') car = getchar();
+		else errorSint(car);
+		casos();
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void Llama(){
+	if(car=='['){
+		car =getchar();
+		if(car=='a') car = getchar();
+		else errorSint(car);
+		if(car=='(') car = getchar();
+		else errorSint(car);
+		listaP();
+		if(car==')') car = getchar();
+		else errorSint(car);
+		if(car==']') car = getchar();
+		else errorSint(car);
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void listP(){
+	if(car==')'){
+		return;
+	}else if(car=='(' || car=='a' || car=='n'||car=='['){
+		E();
+		Param();
+		return;
+	}else if(car=='{'){
+		car = getchar();
+		expCad();
+		if(car=='}') car = getchar();
+		else errorSint(car);
+		Param();
+		return;
+	}else{
+		errorSint(car);
+	}
+}
+void Param(){
+	if(car==','){
+		car = getchar();
+		listP();
+		return;
+	}else if(car==')'){
+		return;
+	}else{
+		errorSint(car);
+	}
+}
 
