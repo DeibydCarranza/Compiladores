@@ -81,10 +81,30 @@ void yyerror(char*);
 void printCaracter_NoHeader(char*);
 void printCaracter_Header(char*);
 
+void AnalizadorSint();
+void Program();
 void otraFunc();
 void Func();
 void TipoF();
+void listArg();
+void otroArg();
+void Cuerpo();
+void listDecl();
+void Decl();
+void Tipo();
+void valorIni();
+void listaVar();
+void tipoVal();
+void Asig();
+void opArit();
+void E();
+void EP();
+void T();
+void TP();
+void F();
+
 void errorSint(char);
+
 %}
 %option yylineno
 palRes        ("assinado"|"caso"|"enquanto"|"fazer"|"flutuador"|"inteiro"|"para"|"quebrar"|"retorno"|"se"|"trocar")
@@ -136,6 +156,8 @@ int main(int argc, char *argv[]){
 
 			// iniciamos el analizador léxico
 			yylex();
+
+			//AnalizadorSint();
 
 			// Guardamos tabla de simbolos y literales
 			imprimirSimbolos(listSim);
@@ -417,16 +439,45 @@ void printCaracter_Header(char* caracter){
 	fprintf(errores,"%s",caracter);
 }
 
+void AnalizadorSint(){
+	//Leer la cadena de atomos
+
+
+
+	car = getchar();
+	Program();
+	
+	if (car == '\n'){
+		printf("Se ha aceptado el codigo fuente");
+	}
+
+}
+
 void errorSint(char car){
 	printf("sdf");
+}
+
+void Program(){
+	if (car=='g' || car=='f' || car=='i'){
+		Func();
+		otraFunc();
+		return;											///
+
+	}else{
+		errorSint(car);
+		return;
+	}
 }
 
 void otraFunc(){
 	if (car=='g' || car=='f' || car=='i'){
 		Func();
 		otraFunc();
-
+		return;											///
 	}else if (car=='\n'){
+		return;
+	}else{
+		errorSint(car);
 		return;
 	}
 }
@@ -441,7 +492,7 @@ void Func(){
 		if(car =='(') car = getchar();
 			else errorSint(car);
 
-		//listArg();
+		listArg();
 
 		if(car ==')') car = getchar();
 			else errorSint(car);
@@ -449,12 +500,12 @@ void Func(){
 		if(car =='{') car = getchar();
 			else errorSint(car);
 		
-		//Cuerpo();
+		Cuerpo();
 
 		if(car =='}') car = getchar();
 			else errorSint(car);
 
-		return;
+		return; 							///////--
 	} else{
 		errorSint(car);
 		return;
@@ -463,14 +514,314 @@ void Func(){
 
 void TipoF(){
 	if (car=='f' || car=='i'){
-		//Tipo();
+		Tipo();
+		return; 							///
 	}else if(car == 'g'){
 		car = getchar();
+		return; 							///
 	}else{
 		errorSint(car);
 		return;
 	}
 }
+
+void listArg(){
+	if (car=='f' || car=='i'){
+		Tipo();
+
+		if(car =='a') car = getchar();
+			else errorSint(car);
+		otroArg();
+		return;								////
+	}else if(car == ')'){
+		return;
+	}else{
+		errorSint(car);
+		return;
+	}
+}
+
+void otroArg(){
+	if (car == ','){
+		car = getchar();
+		Tipo();
+
+		if(car =='a') car = getchar();
+			else errorSint(car);
+		
+		otroArg();
+		return; 							////
+	}else if(car == ')'){
+		return;
+	}else{
+		errorSint(car);
+		return;
+	}
+}
+
+void Cuerpo(){
+	if (car=='a' || car=='u' || car=='t' || car=='b' || car=='q' || car=='z' || car=='s' || 
+		car=='p' || car=='[' || car=='}' || car == 'f' || car == 'i'){
+
+		listDecl();
+		//listaS();							//----------------
+		return;								//////
+	}else{
+		errorSint(car);
+		return;
+	}
+}
+
+void listDecl(){
+	if (car=='a' || car=='u' || car=='t' || car=='b' || car=='q' || car=='z' || car=='s' || 
+		car=='p' || car=='[' || car=='}'){
+
+		return;
+	}else if(car=='f' || car=='i'){
+		Decl();
+		listDecl();
+		return;											////
+	}else{
+		errorSint(car);
+		return;
+	}
+}
+
+void Decl(){
+	if(car=='f' || car=='i'){
+		Tipo();
+
+		if(car =='a') car = getchar();
+			else errorSint(car);
+		
+		valorIni();
+		listaVar();
+
+		if(car ==';') car = getchar();
+			else errorSint(car);
+		
+		return; 							////
+	}else{
+		errorSint(car);
+		return;
+	}
+}
+
+void Tipo(){
+	if (car== 'f'){
+		car = getchar();
+		return; 						////
+	}else if(car=='i'){
+		car = getchar();
+		return;											////
+	}else{
+		errorSint(car);
+		return;
+	}
+}
+
+void valorIni(){
+	if (car== '='){
+		car = getchar();
+		tipoVal();
+		return; 						////
+	}else if(car==',' || car== ';'){
+		return;
+	}else{
+		errorSint(car);
+		return;
+	}
+}
+
+void listaVar(){
+	if (car== ','){
+		car = getchar();
+
+		if(car =='a') car = getchar();
+			else errorSint(car);
+
+		valorIni();
+		listaVar();
+		return; 						////
+	}else if(car== ';'){
+		return;
+	}else{
+		errorSint(car);
+		return;
+	}
+}
+
+void tipoVal(){
+	if (car== 'n'){
+		car = getchar();
+		return; 						////
+	}else if(car== 'v'){
+		car = getchar();
+		return; 						////
+	}else{
+		errorSint(car);
+		return;
+	}
+}
+
+void Asig(){
+	if (car == 'a'){
+
+		car = getchar();
+
+		opArit();
+		E();
+
+		if(car ==';') car = getchar();
+			else errorSint(car);
+
+		return; 						////
+	}else{
+		errorSint(car);
+		return;
+	}
+}
+
+void opArit(){
+	if (car== '='){
+		car = getchar();
+		return; 						////
+	}else if(car== 'x'){
+		car = getchar();
+		return; 						////
+	}else if(car== 'y'){
+		car = getchar();
+		return; 						////
+	}else if(car== 'k'){
+		car = getchar();
+		return; 						////
+	}else if(car== 'r'){
+		car = getchar();
+		return; 						////
+	}else if(car== 'o'){
+		car = getchar();
+		return; 						////
+	}else{
+		errorSint(car);
+		return;
+	}
+}
+
+void E(){
+	if (car == '(' || car == 'a' || car == 'n' || car == '['){
+		T();
+		EP();
+		return; 						////
+	}else{
+		errorSint(car);
+		return;
+	}
+}
+
+void EP(){
+	if (car == '+'){
+		car = getchar();
+		T();
+		EP();
+		return; 						////
+
+	}else if(car == '-'){
+		car = getchar();
+		T();
+		EP();
+		return; 					///
+
+	}else if(car == ';' || car == ')' || car == 'h' || car == 'j' || car == '}' || car == '>' || car == '<' ||
+			 car == 'e' || car == 'd' || car == 'm' || car == 'w' || car == ','){
+
+		return; 
+	}else{
+		errorSint(car);
+		return;
+	}
+}
+
+void T(){
+	if (car == '(' || car == 'a' || car == 'n' || car == '['){
+		
+		F();
+		TP();
+		return; 						////
+	}else{
+		errorSint(car);
+		return;
+	}
+}
+
+void TP(){
+	if (car == '*'){
+		car = getchar();
+		F();
+		TP();
+		return; 						////
+
+	}else if(car == '/'){
+		car = getchar();
+		F();
+		TP();
+		return; 						////
+
+	}else if(car == '%'){
+		car = getchar();
+		F();
+		TP();
+		return; 						////
+
+	}else if(car == '+' || car== '-' || car== ')' || car== ';' || car== '<' || car== '>' || car== 'e' || 
+			car== 'm' || car== 'w' || car== '}' || car== '}' || car== 'h' || car== 'j' || car== ','){
+		
+		return;
+	}else{
+		errorSint(car);
+		return;
+	}
+}
+
+
+void F(){
+	if (car == '('){
+		car = getchar();
+		E();
+
+		if(car ==')') car = getchar();
+			else errorSint(car);
+
+		return; 						////
+
+	}else if(car == 'a'){
+		car = getchar();
+		return;							////
+
+	}else if(car == 'n'){
+		car = getchar();
+		return;							////
+		
+	}else if(car == '['){
+		//Llama();					//-----------------------
+		return;						///
+	}else{
+		errorSint(car);
+		return;
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
