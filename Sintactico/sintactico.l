@@ -81,6 +81,10 @@ void yyerror(char*);
 void printCaracter_NoHeader(char*);
 void printCaracter_Header(char*);
 
+void otraFunc();
+void Func();
+void TipoF();
+void errorSint(char);
 %}
 %option yylineno
 palRes        ("assinado"|"caso"|"enquanto"|"fazer"|"flutuador"|"inteiro"|"para"|"quebrar"|"retorno"|"se"|"trocar")
@@ -417,9 +421,19 @@ void errorSint(char car){
 	printf("sdf");
 }
 
+void otraFunc(){
+	if (car=='g' || car=='f' || car=='i'){
+		Func();
+		otraFunc();
+
+	}else if (car=='\n'){
+		return;
+	}
+}
+
 void Func(){
 	if (car=='g' || car=='f' || car=='i'){
-		//TipoF();
+		TipoF();
 
 		if(car =='a') car = getchar();
 			else errorSint(car);
@@ -446,5 +460,17 @@ void Func(){
 		return;
 	}
 }
+
+void TipoF(){
+	if (car=='f' || car=='i'){
+		//Tipo();
+	}else if(car == 'g'){
+		car = getchar();
+	}else{
+		errorSint(car);
+		return;
+	}
+}
+
 
 
