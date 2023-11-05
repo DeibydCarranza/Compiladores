@@ -103,9 +103,29 @@ void EP();
 void T();
 void TP();
 void F();
-
+void R();
+void opRel();
+void Sent();
+void listaS();
+void expLogica();
+void expLog();
+void expRel();
 void errorSint(char);
-
+void opLog();
+void Enq();
+void Se();
+void Q();
+void Faz();
+void Ret();
+void valRet();
+void expCad();
+void opCad();
+void Para();
+void Trocar();
+void casos();
+void Llama();
+void listP();
+void Param();
 %}
 %option yylineno
 palRes        ("assinado"|"caso"|"enquanto"|"fazer"|"flutuador"|"inteiro"|"para"|"quebrar"|"retorno"|"se"|"trocar")
@@ -927,7 +947,7 @@ void expRel(){
 		errorSint(car);
 	}
 }
-void Log(){
+void opLog(){
 	if (car=='h'){
 		car = getchar();
 		return;
@@ -1087,7 +1107,7 @@ void Para(){
 void Trocar(){
 	if(car=='b'){
 		car = getchar();
-		if(car=='()') car = getchar();
+		if(car=='(') car = getchar();
 		else errorSint(car);
 		if(car=='a') car = getchar();
 		else errorSint(car);
@@ -1158,7 +1178,7 @@ void Llama(){
 		else errorSint(car);
 		if(car=='(') car = getchar();
 		else errorSint(car);
-		listaP();
+		listP();
 		if(car==')') car = getchar();
 		else errorSint(car);
 		if(car==']') car = getchar();
