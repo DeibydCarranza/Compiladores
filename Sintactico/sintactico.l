@@ -79,6 +79,7 @@ void imprimirLiterales(ListaLiterales );
 void agregarListaSimbolos(ListaSimbolos *, Simbolos);
 void agregarListaLiterales(ListaLiterales *, Literales);
 void yyerror(char*);
+void PrintErrorAtomos(int);
 void printCaracter_NoHeader(char*);
 void printCaracter_Header(char*);
 
@@ -177,8 +178,11 @@ int main(int argc, char *argv[]){
 
 			// iniciamos el analizador léxico
 			yylex();
+			fclose(cad_atomos);
 
-			//AnalizadorSint();
+			cad_atomos=fopen("atomos","r");
+			AnalizadorSint();
+			
 
 			// Guardamos tabla de simbolos y literales
 			imprimirSimbolos(listSim);
@@ -187,8 +191,8 @@ int main(int argc, char *argv[]){
 			fprintf(errores,"\n");
 
 			// Cerramos archivos
-			fclose(tab_tokens);
 			fclose(cad_atomos);
+			fclose(tab_tokens);
 			fclose(tab_simbolos);
 			fclose(tab_literales);
 			fclose(errores);
@@ -461,21 +465,36 @@ void printCaracter_Header(char* caracter){
 }
 
 void AnalizadorSint(){
-	//Leer la cadena de atomos
-
-
-
-	car = getchar();
-	Program();
-	
-	if (car == '\n'){
-		printf("Se ha aceptado el codigo fuente");
+	// Redirigimos el apuntador del stream stdin
+	if(freopen("atomos","r",stdin) == NULL){
+		exit(EXIT_FAILURE);
+	}else{
+		// Leemos del stdin
+		car = getchar();
+		Program();
+		if (car == '\n'){
+			printf("Se ha aceptado el codigo fuente");
+		}
 	}
-
+}
+// Función para imprimir la cadena de atomos con el error enmarcado
+void PrintErrorAtomos(int ubicacion){
+	// reiniciamos el desplazamiento de lectura del archivo
+	rewind(cad_atomos);
+	char atom_printed;
+	while((fscanf(cad_atomos,"%c",&atom_printed)) != EOF){
+		if(ftell(cad_atomos) == (ubicacion)){
+			printf("\033[1;31m%c\033[1;0m",atom_printed);
+		}else{
+			printf("%c",atom_printed);
+		}
+	}
 }
 
+// Funcón para denotar los errores sintacticos en la salida
 void errorSint(char car){
-	printf("sdf");
+	PrintErrorAtomos(ftell(stdin));
+	printf("\n");
 }
 
 void Program(){
@@ -585,7 +604,7 @@ void Cuerpo(){
 		car=='p' || car=='[' || car=='}' || car == 'f' || car == 'i'){
 
 		listDecl();
-		//listaS();							//----------------
+		listaS();							//----------------
 		return;								//////
 	}else{
 		errorSint(car);
@@ -694,7 +713,7 @@ void Asig(){
 		E();
 
 		if(car ==';') car = getchar();
-			else errorSint(car);
+		else errorSint(car);
 
 		return; 						////
 	}else{
