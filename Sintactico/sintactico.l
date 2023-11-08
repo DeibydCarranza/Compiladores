@@ -54,7 +54,9 @@ FILE *tab_simbolos;
 FILE *tab_literales;
 FILE *errores;
 FILE *cad_atomos;
-
+// bandera para no imprimir de forma repetida los errores sintácticos
+int flag_to_error = 0;
+int position_error_sintactico;
 char* ERROR;
 char car;
 char* reservadas[]   = {"assinado","caso","enquanto","fazer","flutuador","inteiro","para","quebrar","retorno","se","trocar"};
@@ -111,7 +113,7 @@ void listaS();
 void expLogica();
 void expLog();
 void expRel();
-void errorSint(char);
+void errorSint(char *);
 void opLog();
 void Enq();
 void Se();
@@ -166,6 +168,7 @@ int main(int argc, char *argv[]){
 			printf("compilador: \033[1;31m error: \033[1;0m no such file or directory: %s\ncompilador:\033[1;31m error:\033[1;0m no input files\n",argv[1]);
 			exit(EXIT_FAILURE);
 		}else{
+
 			listSim = crearListaSimbolos();
 			listLit = crearListaLiterales();
 
@@ -466,7 +469,6 @@ void printCaracter_Header(char* caracter){
 	fprintf(stderr,"%s",caracter);
 	fprintf(errores,"%s",caracter);
 }
-
 void AnalizadorSint(){
 	// Redirigimos el apuntador del stream stdin
 	if(freopen("atomos","r",stdin) == NULL){
@@ -475,7 +477,7 @@ void AnalizadorSint(){
 		// Leemos del stdin
 		car = getchar();
 		Program();
-		if (car == EOF){
+		if (flag_to_error == 0){
 			printf("\nSe ha aceptado el codigo fuente\n");
 		}
 	}
@@ -485,8 +487,7 @@ void PrintErrorAtomos(int ubicacion){
 	// reiniciamos el desplazamiento de lectura del archivo
 	rewind(cad_atomos);
 	char atom_printed;
-	printf("\nSintactico::\033[1;31m error\033[1;0m %li::",ftell(stdin));
-
+	printf("           ");
 	while((fscanf(cad_atomos,"%c",&atom_printed)) != EOF){
 		if(ftell(cad_atomos) == (ubicacion)){
 			printf("\033[1;31m%c\033[1;0m",atom_printed);
@@ -494,23 +495,47 @@ void PrintErrorAtomos(int ubicacion){
 			printf("%c",atom_printed);				
 		}
 	}
-}
-
-// Funcón para denotar los errores sintacticos en la salida
-void errorSint(char car){
-	PrintErrorAtomos(ftell(stdin));
 	printf("\n");
-	exit (-1);
+}
+// Funcón para denotar los errores sintacticos en la salida junto con lo esperado
+void errorSint(char* espected){
+	flag_to_error = 1;
+	if(position_error_sintactico != ftell(stdin)){
+		// mensaje
+		printf("Sintáctico:%ld:\033[1;31m error:\033[1;0m atomo %c argumentos esperados %s\n",ftell(stdin),car,espected);
+		// cadena de atomos con el átomo donde ocurrio el error (recarcado)
+		PrintErrorAtomos(ftell(stdin));
+		// señalización de los átomos esperados
+		printf("           ");
+		for(int i = 0;i<ftell(stdin);i++){
+			if(i==(ftell(stdin)-1)){
+				printf("\033[0;36m|\n");
+				printf("           ");
+				for(int i = 0;i<ftell(stdin);i++){
+					if(i==(ftell(stdin)-1)){
+						printf("\033[0;36m%s\033[1;0m\n",espected);
+					}else{
+						printf(" ");
+					}
+				}
+			}else{
+				printf(" ");
+			}
+		}
+		// guardar la posición del último error para no ovlver a imprimir el error
+		position_error_sintactico = ftell(stdin);
+		printf("\n");
+	}
 }
 
 void Program(){
 	if (car=='g' || car=='f' || car=='i'){
 		Func();
 		otraFunc();
-		return;											
+		return;										
 
 	}else{
-		errorSint(car);
+		errorSint("g f i");
 		return;
 	}
 }
@@ -523,7 +548,7 @@ void otraFunc(){
 	}else if (car==EOF){
 		return;
 	}else{
-		errorSint(car);
+		errorSint("g f i ");
 		return;
 	}
 }
@@ -533,27 +558,27 @@ void Func(){
 		TipoF();
 
 		if(car =='a') car = getchar();
-			else errorSint(car);
+			else errorSint("a");
 		
 		if(car =='(') car = getchar();
-			else errorSint(car);
+			else errorSint("(");
 
 		listArg();
 
 		if(car ==')') car = getchar();
-			else errorSint(car);
+			else errorSint(")");
 
 		if(car =='{') car = getchar();
-			else errorSint(car);
+			else errorSint("{");
 		
 		Cuerpo();
 
 		if(car =='}') car = getchar();
-			else errorSint(car);
+			else errorSint("}");
 
 		return; 							
 	} else{
-		errorSint(car);
+		errorSint("g f i");
 		return;
 	}
 }
@@ -566,7 +591,7 @@ void TipoF(){
 		car = getchar();
 		return; 							
 	}else{
-		errorSint(car);
+		errorSint("f i g");
 		return;
 	}
 }
@@ -576,13 +601,13 @@ void listArg(){
 		Tipo();
 
 		if(car =='a') car = getchar();
-			else errorSint(car);
+			else errorSint("a");
 		otroArg();
 		return;								
 	}else if(car == ')'){
 		return;
 	}else{
-		errorSint(car);
+		errorSint("f i )");
 		return;
 	}
 }
@@ -593,14 +618,14 @@ void otroArg(){
 		Tipo();
 
 		if(car =='a') car = getchar();
-			else errorSint(car);
+			else errorSint("a");
 		
 		otroArg();
 		return; 							
 	}else if(car == ')'){
 		return;
 	}else{
-		errorSint(car);
+		errorSint(", )");
 		return;
 	}
 }
@@ -613,7 +638,7 @@ void Cuerpo(){
 		listaS();							
 		return;								
 	}else{
-		errorSint(car);
+		errorSint("a u t b q z s p [ } f i");
 		return;
 	}
 }
@@ -628,7 +653,7 @@ void listDecl(){
 		listDecl();
 		return;
 	}else{
-		errorSint(car);
+		errorSint("a u t b q z s p [ } f i");
 		return;
 	}
 }
@@ -638,17 +663,17 @@ void Decl(){
 		Tipo();
 
 		if(car =='a') car = getchar();
-			else errorSint(car);
+			else errorSint("a");
 		
 		valorIni();
 		listaVar();
 
 		if(car ==';') car = getchar();
-			else errorSint(car);
+			else errorSint(";");
 		
 		return; 							
 	}else{
-		errorSint(car);
+		errorSint("f i");
 		return;
 	}
 }
@@ -661,7 +686,7 @@ void Tipo(){
 		car = getchar();
 		return;											
 	}else{
-		errorSint(car);
+		errorSint("f i");
 		return;
 	}
 }
@@ -674,7 +699,7 @@ void valorIni(){
 	}else if(car==',' || car== ';'){
 		return;
 	}else{
-		errorSint(car);
+		errorSint("= , ;");
 		return;
 	}
 }
@@ -684,7 +709,7 @@ void listaVar(){
 		car = getchar();
 
 		if(car =='a') car = getchar();
-			else errorSint(car);
+			else errorSint("a");
 
 		valorIni();
 		listaVar();
@@ -692,7 +717,7 @@ void listaVar(){
 	}else if(car== ';'){
 		return;
 	}else{
-		errorSint(car);
+		errorSint(", ;");
 		return;
 	}
 }
@@ -705,7 +730,7 @@ void tipoVal(){
 		car = getchar();
 		return; 						
 	}else{
-		errorSint(car);
+		errorSint("n v");
 		return;
 	}
 }
@@ -719,11 +744,11 @@ void Asig(){
 		E();
 
 		if(car ==';') car = getchar();
-		else errorSint(car);
+		else errorSint(";");
 
 		return; 						
 	}else{
-		errorSint(car);
+		errorSint("a");
 		return;
 	}
 }
@@ -748,7 +773,7 @@ void opArit(){
 		car = getchar();
 		return; 						
 	}else{
-		errorSint(car);
+		errorSint("= x y k r o");
 		return;
 	}
 }
@@ -759,7 +784,7 @@ void E(){
 		EP();
 		return; 						
 	}else{
-		errorSint(car);
+		errorSint("( a n [");
 		return;
 	}
 }
@@ -782,7 +807,7 @@ void EP(){
 
 		return; 
 	}else{
-		errorSint(car);
+		errorSint("+ - ; ) h j } > < e d m w ,");
 		return;
 	}
 }
@@ -794,7 +819,7 @@ void T(){
 		TP();
 		return; 						
 	}else{
-		errorSint(car);
+		errorSint("( a n [");
 		return;
 	}
 }
@@ -819,11 +844,11 @@ void TP(){
 		return; 						
 
 	}else if(car == '+' || car== '-' || car== ')' || car== ';' || car== '<' || car== '>' || car== 'e' || 
-			car== 'm' || car== 'w' || car== '}' || car== '}' || car== 'h' || car== 'j' || car== ','){
+			car== 'm' || car== 'w' || car== 'd' || car== '}' || car== 'h' || car== 'j' || car== ','){
 		
 		return;
 	}else{
-		errorSint(car);
+		errorSint("* / % + - ) ; < > e d m w } h j ,");
 		return;
 	}
 }
@@ -835,7 +860,7 @@ void F(){
 		E();
 
 		if(car ==')') car = getchar();
-			else errorSint(car);
+			else errorSint(")");
 
 		return; 						
 
@@ -851,7 +876,7 @@ void F(){
 		Llama();					
 		return;						
 	}else{
-		errorSint(car);
+		errorSint("( a n [");
 		return;
 	}
 }
@@ -863,7 +888,7 @@ void R(){
 		E();
 		return;
 	}else{
-		errorSint(car);
+		errorSint("( a n [");
 	}
 }
 
@@ -887,7 +912,7 @@ void opRel(){
 		car = getchar();
 		return;
 	}else{
-		errorSint(car);
+		errorSint("> < e d m w");
 	}
 }
 
@@ -920,7 +945,7 @@ void Sent(){
 		Llama();
 		return;
 	}else{
-		errorSint(car);
+		errorSint("a u t b q z s p [");
 	}
 }
 void listaS(){
@@ -931,7 +956,7 @@ void listaS(){
 	}else if(car=='#' || car=='}'){
 		return;
 	}else{
-		errorSint(car);
+		errorSint("a u t b q z s p [ # }");
 	}
 }
 void expLogica(){
@@ -944,7 +969,7 @@ void expLogica(){
 		expLog();
 		return;
 	}else{
-		errorSint(car);
+		errorSint("! ( a n [");
 	}
 }
 void expLog(){
@@ -955,7 +980,7 @@ void expLog(){
 	}else if(car==')'){
 		return;
 	}else{
-		errorSint(car);
+		errorSint("h j )");
 	}
 }
 void expRel(){
@@ -963,13 +988,13 @@ void expRel(){
 		car = getchar();
 		R();
 		if(car=='}') car = getchar();
-		else errorSint(car);
+		else errorSint("}");
 		return;
 	}else if(car=='(' || car=='a' || car=='n'||car=='['){
 		E();
 		return;
 	}else{
-		errorSint(car);
+		errorSint("{ ( a n [");
 	}
 }
 void opLog(){
@@ -980,43 +1005,43 @@ void opLog(){
 		car = getchar();
 		return;
 	}else{
-		errorSint(car);
+		errorSint("h j");
 	}
 }
 void Enq(){
 	if (car=='q'){
 		car = getchar();
 		if(car=='(') car = getchar();
-		else errorSint(car);
+		else errorSint("(");
 		expLogica();
 		if(car==')') car = getchar();
-		else errorSint(car);
+		else errorSint(")");
 		if(car=='#') car = getchar();
-		else errorSint(car);
+		else errorSint("#");
 		listaS();
 		if(car=='#') car = getchar();
-		else errorSint(car);
+		else errorSint("#");
 		return;
 	}else{
-		errorSint(car);
+		errorSint("q");
 	}
 }
 void Se(){
 	if (car=='s'){
 		car = getchar();
 		if(car=='(') car = getchar();
-		else errorSint(car);
+		else errorSint("(");
 		expLogica();
 		if(car==')') car = getchar();
-		else errorSint(car);
+		else errorSint(")");
 		if(car=='#') car = getchar();
-		else errorSint(car);
+		else errorSint("#");
 		listaS();
 		if(car=='#') car = getchar();
-		else errorSint(car);
+		else errorSint("#");
 		return;
 	}else{
-		errorSint(car);
+		errorSint("s");
 	}
 }
 void Q(){
@@ -1024,29 +1049,29 @@ void Q(){
 		car = getchar();
 		return;
 	}else{
-		errorSint(car);
+		errorSint("u");
 	}
 }
 void Faz(){
 	if (car=='z'){
 		car = getchar();
 		if(car=='#') car = getchar();
-		else errorSint(car);
+		else errorSint("#");
 		listaS();
 		if(car=='#') car = getchar();
-		else errorSint(car);
+		else errorSint("#");
 		if(car=='q') car = getchar();
-		else errorSint(car);
+		else errorSint("q");
 		if(car=='(') car = getchar();
-		else errorSint(car);
+		else errorSint("(");
 		expLogica();
 		if(car==')') car = getchar();
-		else errorSint(car);
+		else errorSint(")");
 		if(car==';') car = getchar();
-		else errorSint(car);
+		else errorSint(";");
 		return;
 	}else{
-		errorSint(car);
+		errorSint("z");
 	}
 }
 void Ret(){
@@ -1054,10 +1079,10 @@ void Ret(){
 		car = getchar();
 		valRet();
 		if(car==';') car = getchar();
-		else errorSint(car);
+		else errorSint(";");
 		return;
 	}else{
-		errorSint(car);
+		errorSint("t");
 	}
 }
 void valRet(){
@@ -1068,12 +1093,12 @@ void valRet(){
 		car = getchar();
 		expCad();
 		if(car=='}') car = getchar();
-		else errorSint(car);
+		else errorSint("}");
 		return;
 	}else if(car==';'){
 		return;
 	}else{
-		errorSint(car);
+		errorSint("( a n [ { ;");
 	}
 }
 void expCad(){
@@ -1086,7 +1111,7 @@ void expCad(){
 		opCad();
 		return;
 	}else{
-		errorSint(car);
+		errorSint("a v");
 	}
 }
 void opCad(){
@@ -1101,66 +1126,66 @@ void opCad(){
 	}else if(car=='}'){
 		return;
 	}else{
-		errorSint(car);
+		errorSint("l & }");
 	}
 }
 void Para(){
 	if(car=='p'){
 		car = getchar();
 		if(car=='a') car = getchar();
-		else errorSint(car);
+		else errorSint("a");
 		if(car=='[') car = getchar();
-		else errorSint(car);
+		else errorSint("[");
 		if(car=='n') car = getchar();
-		else errorSint(car);
+		else errorSint("n");
 		if(car==',') car = getchar();
-		else errorSint(car);
+		else errorSint(",");
 		if(car=='n') car = getchar();
-		else errorSint(car);
+		else errorSint("n");
 		if(car==']') car = getchar();
-		else errorSint(car);
+		else errorSint("]");
 		if(car=='#') car = getchar();
-		else errorSint(car);
+		else errorSint("#");
 		listaS();
 		if(car=='#') car = getchar();
-		else errorSint(car);
+		else errorSint("#");
 		return;
 	}else{
-		errorSint(car);
+		errorSint("p");
 	}
 }
 void Trocar(){
 	if(car=='b'){
 		car = getchar();
 		if(car=='(') car = getchar();
-		else errorSint(car);
+		else errorSint("(");
 		if(car=='a') car = getchar();
-		else errorSint(car);
+		else errorSint("a");
 		if(car==')') car = getchar();
-		else errorSint(car);
+		else errorSint(")");
 		if(car==':') car = getchar();
-		else errorSint(car);
+		else errorSint(":");
 		if(car=='#') car = getchar();
-		else errorSint(car);
+		else errorSint("#");
 		if(car=='c') car = getchar();
-		else errorSint(car);
+		else errorSint("c");
 		if(car=='(') car = getchar();
-		else errorSint(car);
+		else errorSint("(");
 		if(car=='n') car = getchar();
-		else errorSint(car);
+		else errorSint("n");
 		if(car==')') car = getchar();
-		else errorSint(car);
+		else errorSint(")");
 		if(car=='{') car = getchar();
-		else errorSint(car);
+		else errorSint("{");
 		listaS();
 		if(car=='}') car = getchar();
-		else errorSint(car);
+		else errorSint("}");
 		casos();
 		if(car=='#') car = getchar();
-		else errorSint(car);
+		else errorSint("#");
 		return;
 	}else{
-		errorSint(car);
+		errorSint("b");
 	}
 }
 void casos(){
@@ -1169,48 +1194,48 @@ void casos(){
 	}else if(car=='c'){
 		car = getchar();
 		if(car=='(') car = getchar();
-		else errorSint(car);
+		else errorSint("(");
 		if(car=='n') car = getchar();
-		else errorSint(car);
+		else errorSint("n");
 		if(car==')') car = getchar();
-		else errorSint(car);
+		else errorSint(")");
 		if(car=='{') car = getchar();
-		else errorSint(car);
+		else errorSint("{");
 		listaS();
 		if(car=='}') car = getchar();
-		else errorSint(car);
+		else errorSint("}");
 		casos();
 		return;
 	}else if(car=='('){
 		car = getchar();
 		if(car==')') car = getchar();
-		else errorSint(car);
+		else errorSint(")");
 		if(car=='{') car = getchar();
-		else errorSint(car);
+		else errorSint("{");
 		listaS();
 		if(car=='}') car = getchar();
-		else errorSint(car);
+		else errorSint("}");
 		casos();
 		return;
 	}else{
-		errorSint(car);
+		errorSint("# c (");
 	}
 }
 void Llama(){
 	if(car=='['){
 		car =getchar();
 		if(car=='a') car = getchar();
-		else errorSint(car);
+		else errorSint("a");
 		if(car=='(') car = getchar();
-		else errorSint(car);
+		else errorSint("(");
 		listP();
 		if(car==')') car = getchar();
-		else errorSint(car);
+		else errorSint(")");
 		if(car==']') car = getchar();
-		else errorSint(car);
+		else errorSint("]");
 		return;
 	}else{
-		errorSint(car);
+		errorSint("[");
 	}
 }
 void listP(){
@@ -1224,11 +1249,11 @@ void listP(){
 		car = getchar();
 		expCad();
 		if(car=='}') car = getchar();
-		else errorSint(car);
+		else errorSint("}");
 		Param();
 		return;
 	}else{
-		errorSint(car);
+		errorSint(") ( a n [ {");
 	}
 }
 void Param(){
@@ -1239,7 +1264,7 @@ void Param(){
 	}else if(car==')'){
 		return;
 	}else{
-		errorSint(car);
+		errorSint(", )");
 	}
 }
 
