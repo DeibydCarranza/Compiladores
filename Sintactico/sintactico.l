@@ -294,7 +294,7 @@ void buscarPalabra(int clase,char* palabra,char** tabla,int size){
 				else if (strcmp(asignacion[2],palabra)==0) fprintf(cad_atomos,"y");
 				else if (strcmp(asignacion[3],palabra)==0) fprintf(cad_atomos,"k");
 				else if (strcmp(asignacion[4],palabra)==0) fprintf(cad_atomos,"r");
-				else if (strcmp(asignacion[5],palabra)==0) fprintf(cad_atomos,"0");
+				else if (strcmp(asignacion[5],palabra)==0) fprintf(cad_atomos,"o");
 			}
 			else if (clase == 9){												//Clase OpCadenas
 				if (strcmp(opCadenas[0],palabra)==0) fprintf(cad_atomos,"&");
@@ -455,8 +455,8 @@ void yyerror(char* mensaje){
 
 // Imprimir icinio de una cadena errornea 
 void printCaracter_NoHeader(char* caracter){
-	fprintf(stderr,"Compilador:%d\033[1;31m error:\033[1;0m %s",yylineno,caracter);
-	fprintf(errores,"Compilador:%d error: %s",yylineno,caracter);
+	fprintf(stderr,"Compilador Lexico:%d\033[1;31m error:\033[1;0m %s",yylineno,caracter);
+	fprintf(errores,"Compilador Lexico:%d error: %s",yylineno,caracter);
 }
 // Imprimir elementos de la cadena errornea antes encontrada
 void printCaracter_Header(char* caracter){
@@ -473,7 +473,7 @@ void AnalizadorSint(){
 		car = getchar();
 		Program();
 		if (car == '\n'){
-			printf("Se ha aceptado el codigo fuente");
+			printf("\nSe ha aceptado el codigo fuente");
 		}
 	}
 }
@@ -501,7 +501,7 @@ void Program(){
 	if (car=='g' || car=='f' || car=='i'){
 		Func();
 		otraFunc();
-		return;											///
+		return;											
 
 	}else{
 		errorSint(car);
@@ -513,7 +513,7 @@ void otraFunc(){
 	if (car=='g' || car=='f' || car=='i'){
 		Func();
 		otraFunc();
-		return;											///
+		return;											
 	}else if (car=='\n'){
 		return;
 	}else{
@@ -545,7 +545,7 @@ void Func(){
 		if(car =='}') car = getchar();
 			else errorSint(car);
 
-		return; 							///////--
+		return; 							
 	} else{
 		errorSint(car);
 		return;
@@ -555,10 +555,10 @@ void Func(){
 void TipoF(){
 	if (car=='f' || car=='i'){
 		Tipo();
-		return; 							///
+		return; 							
 	}else if(car == 'g'){
 		car = getchar();
-		return; 							///
+		return; 							
 	}else{
 		errorSint(car);
 		return;
@@ -572,7 +572,7 @@ void listArg(){
 		if(car =='a') car = getchar();
 			else errorSint(car);
 		otroArg();
-		return;								////
+		return;								
 	}else if(car == ')'){
 		return;
 	}else{
@@ -590,7 +590,7 @@ void otroArg(){
 			else errorSint(car);
 		
 		otroArg();
-		return; 							////
+		return; 							
 	}else if(car == ')'){
 		return;
 	}else{
@@ -604,8 +604,8 @@ void Cuerpo(){
 		car=='p' || car=='[' || car=='}' || car == 'f' || car == 'i'){
 
 		listDecl();
-		listaS();							//----------------
-		return;								//////
+		listaS();							
+		return;								
 	}else{
 		errorSint(car);
 		return;
@@ -620,7 +620,7 @@ void listDecl(){
 	}else if(car=='f' || car=='i'){
 		Decl();
 		listDecl();
-		return;											////
+		return;
 	}else{
 		errorSint(car);
 		return;
@@ -640,7 +640,7 @@ void Decl(){
 		if(car ==';') car = getchar();
 			else errorSint(car);
 		
-		return; 							////
+		return; 							
 	}else{
 		errorSint(car);
 		return;
@@ -650,10 +650,10 @@ void Decl(){
 void Tipo(){
 	if (car== 'f'){
 		car = getchar();
-		return; 						////
+		return; 						
 	}else if(car=='i'){
 		car = getchar();
-		return;											////
+		return;											
 	}else{
 		errorSint(car);
 		return;
@@ -664,7 +664,7 @@ void valorIni(){
 	if (car== '='){
 		car = getchar();
 		tipoVal();
-		return; 						////
+		return; 						
 	}else if(car==',' || car== ';'){
 		return;
 	}else{
@@ -682,7 +682,7 @@ void listaVar(){
 
 		valorIni();
 		listaVar();
-		return; 						////
+		return; 						
 	}else if(car== ';'){
 		return;
 	}else{
@@ -694,10 +694,10 @@ void listaVar(){
 void tipoVal(){
 	if (car== 'n'){
 		car = getchar();
-		return; 						////
+		return; 						
 	}else if(car== 'v'){
 		car = getchar();
-		return; 						////
+		return; 						
 	}else{
 		errorSint(car);
 		return;
@@ -715,7 +715,7 @@ void Asig(){
 		if(car ==';') car = getchar();
 		else errorSint(car);
 
-		return; 						////
+		return; 						
 	}else{
 		errorSint(car);
 		return;
@@ -725,22 +725,22 @@ void Asig(){
 void opArit(){
 	if (car== '='){
 		car = getchar();
-		return; 						////
+		return; 						
 	}else if(car== 'x'){
 		car = getchar();
-		return; 						////
+		return; 						
 	}else if(car== 'y'){
 		car = getchar();
-		return; 						////
+		return; 						
 	}else if(car== 'k'){
 		car = getchar();
-		return; 						////
+		return; 						
 	}else if(car== 'r'){
 		car = getchar();
-		return; 						////
+		return; 						
 	}else if(car== 'o'){
 		car = getchar();
-		return; 						////
+		return; 						
 	}else{
 		errorSint(car);
 		return;
@@ -751,7 +751,7 @@ void E(){
 	if (car == '(' || car == 'a' || car == 'n' || car == '['){
 		T();
 		EP();
-		return; 						////
+		return; 						
 	}else{
 		errorSint(car);
 		return;
@@ -763,13 +763,13 @@ void EP(){
 		car = getchar();
 		T();
 		EP();
-		return; 						////
+		return; 						
 
 	}else if(car == '-'){
 		car = getchar();
 		T();
 		EP();
-		return; 					///
+		return; 					
 
 	}else if(car == ';' || car == ')' || car == 'h' || car == 'j' || car == '}' || car == '>' || car == '<' ||
 			 car == 'e' || car == 'd' || car == 'm' || car == 'w' || car == ','){
@@ -786,7 +786,7 @@ void T(){
 		
 		F();
 		TP();
-		return; 						////
+		return; 						
 	}else{
 		errorSint(car);
 		return;
@@ -798,19 +798,19 @@ void TP(){
 		car = getchar();
 		F();
 		TP();
-		return; 						////
+		return; 						
 
 	}else if(car == '/'){
 		car = getchar();
 		F();
 		TP();
-		return; 						////
+		return; 						
 
 	}else if(car == '%'){
 		car = getchar();
 		F();
 		TP();
-		return; 						////
+		return; 						
 
 	}else if(car == '+' || car== '-' || car== ')' || car== ';' || car== '<' || car== '>' || car== 'e' || 
 			car== 'm' || car== 'w' || car== '}' || car== '}' || car== 'h' || car== 'j' || car== ','){
@@ -831,19 +831,19 @@ void F(){
 		if(car ==')') car = getchar();
 			else errorSint(car);
 
-		return; 						////
+		return; 						
 
 	}else if(car == 'a'){
 		car = getchar();
-		return;							////
+		return;							
 
 	}else if(car == 'n'){
 		car = getchar();
-		return;							////
+		return;							
 		
 	}else if(car == '['){
-		//Llama();					//-----------------------
-		return;						///
+		Llama();					
+		return;						
 	}else{
 		errorSint(car);
 		return;
@@ -1088,7 +1088,7 @@ void opCad(){
 		car = getchar();
 		expCad();
 		return;
-	}else if(car=='h'){
+	}else if(car=='&'){
 		car = getchar();
 		expCad();
 		return;

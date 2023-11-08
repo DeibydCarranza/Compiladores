@@ -1,0 +1,6 @@
+inteiro _func(){
+    flutuador _a=5;
+    inteiro _val=2, _num1, _num2;
+    flutuador _cad1="cadena #1", _cad2;
+    flutuador _b=1;
+}

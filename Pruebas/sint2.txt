@@ -1,0 +1,40 @@
+inteiro _testing(){
+	inteiro _num=42;
+	inteiro _result=0;
+	inteiro _contador;
+	flutuador _string = "probando";
+
+	
+	se(_num >= 10)
+	#
+		_result = _num*2;
+	#
+
+	trocar(_result):
+	#
+		caso(84){
+				_result-=10;
+			}
+		caso(52){
+				_result-=10;
+			}
+			(){
+				_result=0;
+			}
+	#
+
+	_contador =0;
+
+	enquanto(_contador > 5)
+	#
+		_result %= _contador;
+
+		_contador += 1;
+	#
+
+	fazer
+	#
+		_result -=3;
+	# enquanto(352 <= _result);
+
+}
