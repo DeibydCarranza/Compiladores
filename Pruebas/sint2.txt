@@ -38,3 +38,13 @@ inteiro _testing(){
 	# enquanto(352 <= _result);
 
 }
+
+
+assinado _llamada(){
+    inteiro _val1 =15;
+    flutuador _cad1="cadena aleatoria", _cad2, _cadena3;
+
+	_val1 *=123;
+
+    [_testing()]
+}

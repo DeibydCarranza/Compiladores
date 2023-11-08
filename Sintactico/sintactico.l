@@ -178,6 +178,9 @@ int main(int argc, char *argv[]){
 
 			// iniciamos el analizador léxico
 			yylex();
+
+			//Agregamos explícitamente un salto de línea como delimitador
+			//fprintf(cad_atomos, "\n"); 	
 			fclose(cad_atomos);
 
 			cad_atomos=fopen("atomos","r");
@@ -455,8 +458,8 @@ void yyerror(char* mensaje){
 
 // Imprimir icinio de una cadena errornea 
 void printCaracter_NoHeader(char* caracter){
-	fprintf(stderr,"Compilador Lexico:%d\033[1;31m error:\033[1;0m %s",yylineno,caracter);
-	fprintf(errores,"Compilador Lexico:%d error: %s",yylineno,caracter);
+	fprintf(stderr," Lexico::%d\033[1;31m error:\033[1;0m %s",yylineno,caracter);
+	fprintf(errores," Lexico:%d error: %s",yylineno,caracter);
 }
 // Imprimir elementos de la cadena errornea antes encontrada
 void printCaracter_Header(char* caracter){
@@ -472,8 +475,8 @@ void AnalizadorSint(){
 		// Leemos del stdin
 		car = getchar();
 		Program();
-		if (car == '\n'){
-			printf("\nSe ha aceptado el codigo fuente");
+		if (car == EOF){
+			printf("\nSe ha aceptado el codigo fuente\n");
 		}
 	}
 }
@@ -482,11 +485,13 @@ void PrintErrorAtomos(int ubicacion){
 	// reiniciamos el desplazamiento de lectura del archivo
 	rewind(cad_atomos);
 	char atom_printed;
+	printf("\nSintactico::\033[1;31m error\033[1;0m %li::",ftell(stdin));
+
 	while((fscanf(cad_atomos,"%c",&atom_printed)) != EOF){
 		if(ftell(cad_atomos) == (ubicacion)){
 			printf("\033[1;31m%c\033[1;0m",atom_printed);
 		}else{
-			printf("%c",atom_printed);
+			printf("%c",atom_printed);				
 		}
 	}
 }
@@ -495,6 +500,7 @@ void PrintErrorAtomos(int ubicacion){
 void errorSint(char car){
 	PrintErrorAtomos(ftell(stdin));
 	printf("\n");
+	exit (-1);
 }
 
 void Program(){
@@ -514,7 +520,7 @@ void otraFunc(){
 		Func();
 		otraFunc();
 		return;											
-	}else if (car=='\n'){
+	}else if (car==EOF){
 		return;
 	}else{
 		errorSint(car);

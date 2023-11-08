@@ -1,38 +1,6 @@
-inteiro _testing(){
-	inteiro _num=42;
-	inteiro _result=0;
-
-	se(_num >= 10)
-	#
-		_result = _num*2;
-	#
-
-	trocar(_result):
-	#
-		caso(84){
-				_result-=10;
-				quebrar;
-			}
-		caso(52){
-				_result-=10;
-				quebrar;
-			}
-			(){
-				_result=0;
-			}
-	#
-
-	inteiro _contador =0;
-	
-	enquanto(_contador != 5)
-	#
-		_result %= _contador;
-		_contador += 1;
-	#
-
-	fazer
-	#
-		_result -=3;
-	# enquanto("hola" like "hola");
-
+inteiro _func(){
+    flutuador _a=5;
+    inteiro _val=2, _num1, _num2;
+    flutuador _cad1="cadena #1", _cad2
+    flutuador _b=1;
 }
