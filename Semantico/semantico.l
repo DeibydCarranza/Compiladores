@@ -64,6 +64,8 @@ char* relacionales[] = {"==","!=",">","<",">=","<="};
 char* logicos[]      = {"&&","||","!"};
 char* opCadenas[]    = {"&","like"};
 char* asignacion[]   = {"=","+=","-=","*=","/=","%="};
+
+char* token;
 ListaLiterales listLit;
 Literales tabLiterales;
 ListaSimbolos listSim;
@@ -95,7 +97,7 @@ void otroArg();
 void Cuerpo();
 void listDecl();
 void Decl();
-void Tipo();
+int Tipo();
 void valorIni();
 void listaVar();
 void tipoVal();
@@ -129,6 +131,9 @@ void casos();
 void Llama();
 void listP();
 void Param();
+
+int getValorToken(char *);
+void AsignaTipo(int,int);
 %}
 %option yylineno
 palRes        ("assinado"|"caso"|"enquanto"|"fazer"|"flutuador"|"inteiro"|"para"|"quebrar"|"retorno"|"se"|"trocar")
@@ -659,14 +664,19 @@ void listDecl(){
 }
 
 void Decl(){
+	int tipo, pos;
 	if(car=='f' || car=='i'){
-		Tipo();
+		tipo=Tipo();
 
-		if(car =='a') car = getchar();
-			else errorSint("a");
+		if(car =='a'){
+			pos = getValorToken(token);
+			car = getchar();
+		}else errorSint("a");
+
+		AsignaTipo(pos,tipo);
 		
 		valorIni();
-		listaVar();
+		listaVar(tipo);
 
 		if(car ==';') car = getchar();
 			else errorSint(";");
@@ -678,16 +688,15 @@ void Decl(){
 	}
 }
 
-void Tipo(){
-	if (car== 'f'){
+int Tipo(){
+	int tipo;
+	if (car== 'f' || car== 'i'){
+		tipo = getValorToken(token);
 		car = getchar();
-		return; 						
-	}else if(car=='i'){
-		car = getchar();
-		return;											
+		return tipo; 											
 	}else{
 		errorSint("f i");
-		return;
+		return -1;
 	}
 }
 
@@ -1272,9 +1281,15 @@ void Param(){
 	}
 }
 
+/* Funciones para obtener el token y asignar tipo en semántico*/
 
+int getValorToken(char * tok){
+	return 0;
+}
 
+void AsignaTipo(int pos,int tipo){
 
+}
 
 
 
