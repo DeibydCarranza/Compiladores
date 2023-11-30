@@ -610,11 +610,17 @@ int TipoF(){
 }
 
 void listArg(){
+	int tipo,pos;
 	if (car=='f' || car=='i'){
-		Tipo();
+		tipo=Tipo();
 
-		if(car =='a') car = getchar();
-			else errorSint("a");
+		if(car =='a'){
+			pos = getValorToken(token,1);
+			car = getchar();
+		}else errorSint("a");
+
+		AsignaTipo(pos,tipo);
+
 		otroArg();
 		return;								
 	}else if(car == ')'){
@@ -626,12 +632,17 @@ void listArg(){
 }
 
 void otroArg(){
+	int tipo,pos;
 	if (car == ','){
 		car = getchar();
-		Tipo();
+		tipo=Tipo();
 
-		if(car =='a') car = getchar();
-			else errorSint("a");
+		if(car =='a'){
+			pos = getValorToken(token,1);
+			car = getchar();
+		}else errorSint("a");
+
+		AsignaTipo(pos,tipo);
 		
 		otroArg();
 		return; 							
@@ -682,7 +693,6 @@ void Decl(){
 		}else errorSint("a");
 
 		AsignaTipo(pos,tipo);
-		
 		valorIni();
 		listaVar(tipo);
 
@@ -1303,7 +1313,7 @@ int getValorToken(char * tok, int flag){
 }
 
 void AsignaTipo(int pos,int tipo){
-
+	
 }
 
 
