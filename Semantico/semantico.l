@@ -54,6 +54,7 @@ FILE *tab_simbolos;
 FILE *tab_literales;
 FILE *errores;
 FILE *cad_atomos;
+FILE* get_value;
 // bandera para no imprimir de forma repetida los errores sintácticos
 int flag_to_error = 0;
 int position_error_sintactico;
@@ -132,8 +133,12 @@ void Llama();
 void listP();
 void Param();
 
-int getValorToken(char *,int);
+int getValorToken();
 void AsignaTipo(int,int);
+char* getc_line();
+int read_value();
+int look_for_value();
+int fseek_line(FILE*, int);
 %}
 %option yylineno
 palRes        ("assinado"|"caso"|"enquanto"|"fazer"|"flutuador"|"inteiro"|"para"|"quebrar"|"retorno"|"se"|"trocar")
@@ -183,6 +188,7 @@ int main(int argc, char *argv[]){
 			tab_simbolos=fopen("archSimbol","w");
 			tab_literales=fopen("archLite","w");
 			errores=fopen("errores","w");
+			get_value = fopen("get_vaue","w");
 
 			// iniciamos el analizador léxico
 			yylex();
@@ -190,8 +196,10 @@ int main(int argc, char *argv[]){
 			//Agregamos explícitamente un salto de línea como delimitador
 			//fprintf(cad_atomos, "\n"); 	
 			fclose(cad_atomos);
+			fclose(tab_tokens);
 
 			cad_atomos=fopen("atomos","r");
+			tab_tokens=fopen("token","r");
 			AnalizadorSint();
 			
 
@@ -202,6 +210,7 @@ int main(int argc, char *argv[]){
 			fprintf(errores,"\n");
 
 			// Cerramos archivos
+			fclose(get_value);
 			fclose(cad_atomos);
 			fclose(tab_tokens);
 			fclose(tab_simbolos);
@@ -564,7 +573,7 @@ void Func(){
 		tipo=TipoF();
 
 		if(car =='a'){
-			pos = getValorToken(token,1);
+			pos = getValorToken();
 			car = getchar();
 		}else errorSint("a");
 		
@@ -600,7 +609,7 @@ int TipoF(){
 		return tipo; 	
 
 	}else if(car == 'g'){
-		tipo = getValorToken(token,2);
+		tipo = getValorToken();
 		car = getchar();
 		return tipo; 						
 	}else{
@@ -677,7 +686,7 @@ void Decl(){
 		tipo=Tipo();
 
 		if(car =='a'){
-			pos = getValorToken(token,1);
+			pos = getValorToken();
 			car = getchar();
 		}else errorSint("a");
 
@@ -699,7 +708,7 @@ void Decl(){
 int Tipo(){
 	int tipo;
 	if (car== 'f' || car== 'i'){
-		tipo = getValorToken(token,2);
+		tipo = getValorToken();
 		car = getchar();
 		return tipo; 											
 	}else{
@@ -728,7 +737,7 @@ void listaVar(int tipo){
 		car = getchar();
 
 		if(car =='a'){
-			pos = getValorToken(token,1);
+			pos = getValorToken();
 			car = getchar();
 		}else errorSint("a");
 
@@ -1298,20 +1307,63 @@ void Param(){
 
 /* Funciones para obtener el token y asignar tipo en semántico*/
 
-int getValorToken(char * tok, int flag){
-	return 0;
+int getValorToken(){
+	int value;
+	// posicionamos el offset del archivo tokens en el renglon correspondiente al offset del archivo atomos 
+	fseek_line(tab_tokens,ftell(stdin)+1);
+	value = look_for_value();
+	fprintf(get_value,"%d\n",value);
+	return value;
 }
 
 void AsignaTipo(int pos,int tipo){
-
 }
 
+int fseek_line(FILE* input, int row) {
+    int offset_read = 0;
+    int currentChar;
+	//excluimos el caso de ningun despazamiento
+    if(row != 0){
+		// para mantener un desplazamiento del offset congruente con el parametro de entrada (1,2,3...) decrementamos el input
+        for(int i = 0; i < (row-1); i++){
+            if((currentChar = getc(input)) != EOF){
+                fseek(input,-1,SEEK_CUR);
+                do{
+                    currentChar = getc(input);
+                }while(currentChar != '\n' && currentChar != EOF);
+            }else{
+                printf("Error: defauld segment: (%d)\n",row);
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
+    return 0;
+}
+int look_for_value(){
+	int value;
+	int offset_mul = 2;
+	while((value = getc(tab_tokens)) != ','){
+		fseek(tab_tokens,-1*offset_mul,SEEK_CUR);
+		offset_mul ++;
+	}
+	return read_value();
+}
 
-
-
-
-
-
-
-
-
+int read_value(){
+	int value, count;
+	char* value_atom = malloc(100); 
+	// se mete de forma inversa el valor
+	while((value = getc(tab_tokens)) != '\n'){
+		*(value_atom + count) = value;
+		count++;
+	}
+	// se acomoda el valor
+	char* value_atom_aux = malloc(count*(sizeof(char)));
+	for(int i = 0; i < count; i++){
+		value_atom_aux[i] = *(value_atom + count);
+		count--;
+	}
+	free(value_atom);
+	value = atoi(value_atom_aux);
+	return value;
+}
