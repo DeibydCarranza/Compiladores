@@ -91,7 +91,7 @@ void AnalizadorSint();
 void Program();
 void otraFunc();
 void Func();
-void TipoF();
+int TipoF();
 void listArg();
 void otroArg();
 void Cuerpo();
@@ -132,7 +132,7 @@ void Llama();
 void listP();
 void Param();
 
-int getValorToken(char *);
+int getValorToken(char *,int);
 void AsignaTipo(int,int);
 %}
 %option yylineno
@@ -559,12 +559,17 @@ void otraFunc(){
 }
 
 void Func(){
+	int tipo,pos;
 	if (car=='g' || car=='f' || car=='i'){
-		TipoF();
+		tipo=TipoF();
 
-		if(car =='a') car = getchar();
-			else errorSint("a");
+		if(car =='a'){
+			pos = getValorToken(token,1);
+			car = getchar();
+		}else errorSint("a");
 		
+		AsignaTipo(pos,tipo);
+
 		if(car =='(') car = getchar();
 			else errorSint("(");
 
@@ -588,16 +593,19 @@ void Func(){
 	}
 }
 
-void TipoF(){
+int TipoF(){
+	int tipo,pos;
 	if (car=='f' || car=='i'){
-		Tipo();
-		return; 							
+		tipo=Tipo();
+		return tipo; 	
+
 	}else if(car == 'g'){
+		tipo = getValorToken(token,2);
 		car = getchar();
-		return; 							
+		return tipo; 						
 	}else{
 		errorSint("f i g");
-		return;
+		return -1;
 	}
 }
 
@@ -669,7 +677,7 @@ void Decl(){
 		tipo=Tipo();
 
 		if(car =='a'){
-			pos = getValorToken(token);
+			pos = getValorToken(token,1);
 			car = getchar();
 		}else errorSint("a");
 
@@ -691,7 +699,7 @@ void Decl(){
 int Tipo(){
 	int tipo;
 	if (car== 'f' || car== 'i'){
-		tipo = getValorToken(token);
+		tipo = getValorToken(token,2);
 		car = getchar();
 		return tipo; 											
 	}else{
@@ -713,15 +721,22 @@ void valorIni(){
 	}
 }
 
-void listaVar(){
+void listaVar(int tipo){
+	int pos;
+
 	if (car== ','){
 		car = getchar();
 
-		if(car =='a') car = getchar();
-			else errorSint("a");
+		if(car =='a'){
+			pos = getValorToken(token,1);
+			car = getchar();
+		}else errorSint("a");
 
+		AsignaTipo(pos,tipo);
+		
 		valorIni();
-		listaVar();
+		listaVar(tipo);
+
 		return; 						
 	}else if(car== ';'){
 		return;
@@ -1283,7 +1298,7 @@ void Param(){
 
 /* Funciones para obtener el token y asignar tipo en semántico*/
 
-int getValorToken(char * tok){
+int getValorToken(char * tok, int flag){
 	return 0;
 }
 
