@@ -54,7 +54,6 @@ FILE *tab_simbolos;
 FILE *tab_literales;
 FILE *errores;
 FILE *cad_atomos;
-FILE* get_value;
 // bandera para no imprimir de forma repetida los errores sintácticos
 int flag_to_error = 0;
 int position_error_sintactico;
@@ -70,6 +69,7 @@ char* token;
 ListaLiterales listLit;
 Literales tabLiterales;
 ListaSimbolos listSim;
+ListaSimbolos listaAux;
 Simbolos tabSimbolos;
 int yylineno_anterior;
 //ENCABEZADOS
@@ -188,7 +188,6 @@ int main(int argc, char *argv[]){
 			tab_simbolos=fopen("archSimbol","w");
 			tab_literales=fopen("archLite","w");
 			errores=fopen("errores","w");
-			get_value = fopen("get_vaue","w");
 
 			// iniciamos el analizador léxico
 			yylex();
@@ -204,13 +203,13 @@ int main(int argc, char *argv[]){
 			
 
 			// Guardamos tabla de simbolos y literales
-			imprimirSimbolos(listSim);
+			//imprimirSimbolos(listSim);
+			imprimirSimbolos(listaAux);
 			imprimirLiterales(listLit);
 			fprintf(stderr,"\n");
 			fprintf(errores,"\n");
 
 			// Cerramos archivos
-			fclose(get_value);
 			fclose(cad_atomos);
 			fclose(tab_tokens);
 			fclose(tab_simbolos);
@@ -571,7 +570,6 @@ void Func(){
 	int tipo,pos;
 	if (car=='g' || car=='f' || car=='i'){
 		tipo=TipoF();
-
 		if(car =='a'){
 			pos = getValorToken();
 			car = getchar();
@@ -619,11 +617,18 @@ int TipoF(){
 }
 
 void listArg(){
+	int tipo;
+	int pos;
 	if (car=='f' || car=='i'){
-		Tipo();
+		tipo=Tipo();
 
-		if(car =='a') car = getchar();
-			else errorSint("a");
+		if(car =='a'){
+			pos = getValorToken();
+			car = getchar();
+		}else errorSint("a");
+
+		AsignaTipo(pos,tipo);
+
 		otroArg();
 		return;								
 	}else if(car == ')'){
@@ -634,13 +639,20 @@ void listArg(){
 	}
 }
 
+
 void otroArg(){
+	int tipo;
+	int pos;
 	if (car == ','){
 		car = getchar();
-		Tipo();
+		tipo=Tipo();
 
-		if(car =='a') car = getchar();
-			else errorSint("a");
+		if(car =='a'){
+			pos = getValorToken();
+			car = getchar();
+		}else errorSint("a");
+
+		AsignaTipo(pos,tipo);
 		
 		otroArg();
 		return; 							
@@ -1311,15 +1323,13 @@ int getValorToken(){
 	int value;
 	// posicionamos el offset del archivo tokens en el renglon correspondiente al offset del archivo atomos 
 	fseek_line(tab_tokens,ftell(stdin)+1);
+	fseek(tab_tokens,-1,SEEK_CUR);
 	value = look_for_value();
-	fprintf(get_value,"%d\n",value);
 	return value;
 }
 
-void AsignaTipo(int pos,int tipo){
-}
-
 int fseek_line(FILE* input, int row) {
+	fseek(input, 0, SEEK_SET);
     int offset_read = 0;
     int currentChar;
 	//excluimos el caso de ningun despazamiento
@@ -1341,16 +1351,16 @@ int fseek_line(FILE* input, int row) {
 }
 int look_for_value(){
 	int value;
-	int offset_mul = 2;
+	fseek(tab_tokens,-2,SEEK_CUR);
 	while((value = getc(tab_tokens)) != ','){
-		fseek(tab_tokens,-1*offset_mul,SEEK_CUR);
-		offset_mul ++;
+		fseek(tab_tokens,-2,SEEK_CUR);
 	}
 	return read_value();
 }
 
 int read_value(){
-	int value, count;
+	int value;
+	int count = 0;
 	char* value_atom = malloc(100); 
 	// se mete de forma inversa el valor
 	while((value = getc(tab_tokens)) != '\n'){
@@ -1360,10 +1370,37 @@ int read_value(){
 	// se acomoda el valor
 	char* value_atom_aux = malloc(count*(sizeof(char)));
 	for(int i = 0; i < count; i++){
-		value_atom_aux[i] = *(value_atom + count);
-		count--;
+		value_atom_aux[i] = *(value_atom + (count-i-1));
 	}
 	free(value_atom);
 	value = atoi(value_atom_aux);
 	return value;
+}
+
+
+/* Función que actualiza la tabla de símbolos mientras realiza el análisis sintáctico-semántico.
+	Actualiza el tipo de una lista ligada por medio de la posición dada. Se realiza una copia de la lista
+	ligada "listSim" previamente definida (inicializada en -1)
+*/
+void AsignaTipo(int pos,int tipo){
+	listaAux = listSim;
+
+    if (listaAux.head == NULL) {
+        printf("La lista está vacía\n");
+        return;
+    }
+
+    NodoSimbolos *current = listaAux.head;
+    int contador = 0;
+
+    while (current != NULL && contador < pos) {
+        current = current->next;
+        contador++;
+    }
+
+    if (current == NULL) {
+        printf("La posicion especificada no existe en la lista\n");
+    } else {
+        current->tabSimb.tipo = tipo;        
+    }
 }
