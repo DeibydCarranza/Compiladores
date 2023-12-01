@@ -194,11 +194,15 @@ int main(int argc, char *argv[]){
 
 			//Agregamos explícitamente un salto de línea como delimitador
 			//fprintf(cad_atomos, "\n"); 	
+
+			//cerramos los archivos en modo escritura
 			fclose(cad_atomos);
 			fclose(tab_tokens);
-
+			//abrimos los archivos en modo lectura
 			cad_atomos=fopen("atomos","r");
 			tab_tokens=fopen("token","r");
+
+			
 			AnalizadorSint();
 			
 
@@ -1317,7 +1321,12 @@ void Param(){
 	}
 }
 
-/* Funciones para obtener el token y asignar tipo en semántico*/
+/*
+	Función para obtener el valor del token del atomo leido (identificador y tipo);
+	esta función desplaza el offset del stream del archivo de tokens hasta un renglón adelante del correspondiente al token
+	del atomo leido. Y finalmente posicionamos el offset en el primer elemento de derecha a izquierda para comenzar a buscar
+	el valor.
+*/
 
 int getValorToken(){
 	int value;
@@ -1327,7 +1336,11 @@ int getValorToken(){
 	value = look_for_value();
 	return value;
 }
-
+/*
+	Esta función posiciona el offset del stream pasado como prametro en el renglon señalado; para este 
+	recorrido se va leyendo caracter por caracter hasta encontrar un salto de línea o bien, para un caso especial, el EOF o 
+	fin de archivo.
+*/
 int fseek_line(FILE* input, int row) {
 	fseek(input, 0, SEEK_SET);
     int offset_read = 0;
@@ -1337,27 +1350,36 @@ int fseek_line(FILE* input, int row) {
 		// para mantener un desplazamiento del offset congruente con el parametro de entrada (1,2,3...) decrementamos el input
         for(int i = 0; i < (row-1); i++){
             if((currentChar = getc(input)) != EOF){
+				// regresamos el offset a su posición dado que la validación anterior lo desplaza 1 dirección
                 fseek(input,-1,SEEK_CUR);
                 do{
                     currentChar = getc(input);
                 }while(currentChar != '\n' && currentChar != EOF);
             }else{
-                printf("Error: defauld segment: (%d)\n",row);
+                printf("\033[1;31mError:\033[1;0m defauld segment: (%d)\n",row);
                 exit(EXIT_FAILURE);
             }
         }
     }
     return 0;
 }
+/*
+	Esta función posiciona el offset del stream de tokens en el primer caracter despues de la coma, es decir, en el valor.
+	Para este desplazamiento se recorren los caracteres de derecha a izquierda.
+*/
 int look_for_value(){
 	int value;
+	// posicionamos el cursor en el último caracter del renglón
 	fseek(tab_tokens,-2,SEEK_CUR);
 	while((value = getc(tab_tokens)) != ','){
+		// leemos de derecha a izquierda
 		fseek(tab_tokens,-2,SEEK_CUR);
 	}
 	return read_value();
 }
-
+/*
+	Esta función lee el valor del token y lo almacena en una cadena par después convertirlo en numerico (int)
+*/
 int read_value(){
 	int value;
 	int count = 0;
@@ -1367,18 +1389,15 @@ int read_value(){
 		*(value_atom + count) = value;
 		count++;
 	}
-	// se acomoda el valor
-	char* value_atom_aux = malloc(count*(sizeof(char)));
-	for(int i = 0; i < count; i++){
-		value_atom_aux[i] = *(value_atom + (count-i-1));
-	}
+	printf("atom = %s\n",value_atom);
+	value = atoi(value_atom);
 	free(value_atom);
-	value = atoi(value_atom_aux);
 	return value;
 }
 
 
-/* Función que actualiza la tabla de símbolos mientras realiza el análisis sintáctico-semántico.
+/* 
+	Función que actualiza la tabla de símbolos mientras realiza el análisis sintáctico-semántico.
 	Actualiza el tipo de una lista ligada por medio de la posición dada. Se realiza una copia de la lista
 	ligada "listSim" previamente definida (inicializada en -1)
 */
